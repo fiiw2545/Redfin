@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600&display=swap');
+.property-card {
+  width: 300px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif;
+  position: relative; /* เพิ่มตำแหน่งให้กับปุ่ม */
+}
+
+.photo-slider {
+  height: 200px;
+  width: 100%;
+  overflow: hidden;
+  position: relative; /* กำหนดตำแหน่งที่สัมพันธ์กับปุ่ม */
+}
+
+.photo-slider img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* เพิ่มการแสดงแท็กที่ซ้อนทับรูปภาพ */
+.property-tags {
+  position: absolute;
+  top: 10px; /* ตำแหน่งของแท็ก */
+  left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 10; /* ให้แท็กอยู่เหนือรูปภาพ */
+}
+
+.property-tag {
+  background-color: rgba(255, 255, 255, 0.7); /* สีพื้นหลังโปร่งใส */
+  color: #333;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  text-transform: capitalize;
+  transition: background-color 0.3s ease;
+  font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif;
+  font-weight: 800;
+}
+
+.property-tag:hover {
+  background-color: #f1c40f; /* สีที่เปลี่ยนเมื่อ hover */
+  cursor: pointer;
+}
+
+.property-details {
+  padding: 16px;
+}
+
+.property-price {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.property-stats span {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.property-address {
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+}
+
+/* ปุ่มแสดงเมื่อ hover */
+.property-card:hover .slider-controls {
+  opacity: 1;
+}
+
+.slider-controls {
+  opacity: 0; /* ซ่อนปุ่มเริ่มต้น */
+  position: absolute;
+  top: 50%; /* ตั้งตำแหน่งให้ปุ่มอยู่กึ่งกลางแนวตั้ง */
+  left: 50%; /* ตั้งตำแหน่งให้ปุ่มอยู่กึ่งกลางแนวนอน */
+  transform: translate(-50%, -50%); /* ปรับตำแหน่งให้ตรงกลาง */
+  display: flex;
+  justify-content: space-between;
+  width: 100%; /* ให้ปุ่มขยายเต็มความกว้างของ photo-slider */
+  transition: opacity 0.3s ease; /* ทำให้ปุ่มแสดงและหายไปอย่างนุ่มนวล */
+}
+
+.slider-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.slider-button:hover svg {
+  fill: #f1c40f; /* เปลี่ยนสีลูกศรเมื่อ hover */
+}
+
+.slider-button svg {
+  height: 30px; /* ขยายขนาดลูกศร */
+  width: 30px;
+  stroke: #fff;
+  stroke-width: 2px;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, .5)); /* เพิ่มเงาให้ลูกศร */
+}
+
+/* ปุ่มซ้ายอยู่ด้านซ้าย */
+.slider-button.prev {
+  position: absolute;
+  left: 10px; /* ขยับให้ปุ่มอยู่ด้านซ้าย */
+  top: -70px;
+}
+
+/* ปุ่มขวาอยู่ด้านขวา */
+.slider-button.next {
+  position: absolute;
+  right: 10px; /* ขยับให้ปุ่มอยู่ด้านขวา */
+  top: -70px;
+}
+
+/* สีสำหรับ "Listed by Redfin" */
+.property-tag.listed-by-redfin {
+  background-color: #c82021;
+  color: #fff;
+  text-transform: uppercase; /* ทำให้ข้อความเป็นตัวพิมพ์ใหญ่ */
+}
+
+/* สีสำหรับ "3D Walkthrough" */
+.property-tag.three-d-walkthrough {
+  background-color: #7556f2;
+  color: #fff;
+  text-transform: uppercase; /* ทำให้ข้อความเป็นตัวพิมพ์ใหญ่ */
+}
+

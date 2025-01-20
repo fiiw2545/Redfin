@@ -1,0 +1,134 @@
+.contact-form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 40px;
+    padding: 40px;
+    background-color: #f5f5f5;
+    align-items: center; /* Align items to center for vertical centering */
+}
+
+.form-header {
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center vertically within the left column */
+    text-align: left;
+    padding-right: 20px;
+}
+
+.form-header h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.form-header p {
+    color: #666;
+    font-size: 16px;
+    margin: 0;
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+}
+
+.contact-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact-form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.contact-form-group input[type="text"],
+.contact-form-group input[type="email"],
+.contact-form-group input[type="tel"],
+.contact-form-group textarea {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.contact-form-group textarea {
+    resize: none; /* Disable resizing */
+    height: 100px; /* Fixed height for consistency */
+}
+
+.contact-search-box {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.contact-search-box input[type="text"] {
+    padding-right: 40px;
+}
+
+.contact-search-button {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #007bc3;
+}
+
+.contact-submit-button {
+    padding: 12px 20px;
+    background-color: #d32f2f;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+}
+
+.contact-submit-button:hover {
+    background-color: #b71c1c;
+}
+
+.contact-form-footer {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.contact-form-footer a {
+    color: #007bc3;
+    text-decoration: none;
+}
+
+.contact-form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 768px) {
+    .contact-form-container {
+        grid-template-columns: 1fr; /* Stack columns in one row */
+        text-align: center;
+    }
+
+    .form-header {
+        max-width: 100%;
+        text-align: center;
+        padding-right: 0;
+    }
+
+    .contact-form {
+        max-width: 100%;
+    }
+}

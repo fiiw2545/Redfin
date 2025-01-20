@@ -1,0 +1,277 @@
+
+.houses-for-sale {
+  display: flex;
+  flex-direction: column;
+  padding: 50px;
+  background-color: #fff;
+  font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif;
+}
+
+
+.houses-for-sale__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: nowrap;
+  width: 100%; 
+}
+
+.houses-for-sale__content {
+  flex: 1;
+  max-width: 50%;
+}
+
+.houses-for-sale__content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.houses-for-sale__content p {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.houses-for-sale__image {
+  flex: 1;
+  max-width: 50%;
+  text-align: center;
+}
+
+.houses-for-sale__image img {
+  width: 100%;
+  height: auto;
+}
+
+
+.houses-for-sale__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding-top: 20px;
+  justify-content: flex-start; 
+  align-items: stretch;
+}
+
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+
+.houses-for-sale__form input,
+.houses-for-sale__form select,
+.houses-for-sale__form button {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  height: 42px; 
+}
+
+
+.houses-for-sale__form input {
+  width: 50%;
+}
+
+.houses-for-sale__form select {
+  width: 12.5%; 
+}
+
+.houses-for-sale__form button {
+  width: 25%; 
+  background-color: #c82021;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px; 
+}
+
+.houses-for-sale__form button:hover {
+  background-color: #a51818;
+}
+
+
+@media (max-width: 1030px) {
+  .houses-for-sale__top {
+    flex-direction: column; 
+    align-items: center;
+  }
+
+  .houses-for-sale__content,
+  .houses-for-sale__image {
+    max-width: 100%;
+  }
+
+  .houses-for-sale__content {
+    margin-bottom: 20px; 
+  }
+}
+
+
+@media (max-width: 768px) {
+  .houses-for-sale__form {
+    flex-direction: column; 
+    gap: 20px;
+  }
+
+  .houses-for-sale__form input,
+  .houses-for-sale__form select,
+  .houses-for-sale__form button {
+    width: 100%; 
+  }
+
+
+  .houses-for-sale__content h1 {
+    font-size: 2rem;
+  }
+
+  .houses-for-sale__content p {
+    font-size: 0.9rem;
+  }
+}
+
+/* --------------------------------------------------------------------------- */
+
+.houses-for-sale__cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 16px;
+}
+
+
+.property-card {
+  width: 100%;
+  max-width: 300px;
+  min-height: 330px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif;
+  position: relative;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.property-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.property-details {
+  padding: 16px;
+  flex-grow: 1;
+}
+
+.property-price {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.property-stats span {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.property-address {
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+}
+
+.property-link {
+  display: inline-block;
+  margin-top: 12px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+
+.CarouselArrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background-color: #fff;
+  border: 2px solid #333;
+  border-radius: 50%;
+  padding: 8px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.CarouselArrow--prev {
+  left: 10px;
+}
+
+.CarouselArrow--next {
+  right: 10px;
+}
+
+.SvgIcon {
+  fill: #333;
+  width: 16px;
+  height: 16px;
+  transition: fill 0.3s ease;
+}
+
+@media (max-width: 600px) {
+  .property-card {
+    max-width: 90%;
+  }
+
+  .houses-for-sale__form button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 1430px) {
+  .houses-for-sale__form {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .houses-for-sale__form input,
+  .houses-for-sale__form select,
+  .houses-for-sale__form button {
+    width: 100%;
+  }
+
+  .houses-for-sale__content,
+  .houses-for-sale__image {
+    max-width: 100%;
+  }
+
+  .property-card {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}

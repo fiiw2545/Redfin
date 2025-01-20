@@ -1,0 +1,312 @@
+@import url("https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600&display=swap");
+
+/* -------------------
+   Desktop Styles
+------------------- */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 30px;
+  font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto,
+    "Droid Sans", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 10;
+  overflow: visible;
+  background-color: black;
+  width: 100%;
+}
+
+.navbar--home {
+  background-color: transparent;
+}
+
+.navbar__logo {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__logo .logo {
+  max-width: 130px;
+  height: auto;
+}
+
+.navbar__menu-actions.navbar--home .navbar__nav a,
+.navbar__menu-actions.navbar--home .join-signin {
+  color: #333;
+  border-color: #333;
+}
+
+.navbar__menu-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.navbar__nav ul {
+  display: flex;
+  gap: 24.5px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-wrap: nowrap;
+}
+
+.navbar__nav ul li {
+  position: relative;
+}
+
+.navbar__nav a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+}
+
+.navbar__actions .join-signin {
+  padding: 8px 15px;
+  border: 0.8px solid #ffffff;
+  border-radius: 1px;
+  color: #ffffff;
+  background-color: transparent;
+  font-weight: bold;
+  margin-left: 30px;
+  transition: background-color 0.3s ease;
+  font-size: 14px;
+  font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto,
+    "Droid Sans", Helvetica, Arial, sans-serif;
+}
+
+.navbar__actions .join-signin:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar .dropdown {
+  position: relative;
+  z-index: 20;
+}
+
+.navbar .dropdown-content {
+  display: none;
+  position: absolute;
+  top: 30px;
+  left: -140px;
+  background-color: #ffffff;
+  color: #333;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+  border-radius: 4px;
+  grid-template-columns: auto auto auto;
+  gap: 15px;
+  padding: 15px;
+  white-space: nowrap;
+  max-width: none;
+}
+
+.navbar__nav ul > li:hover .dropdown-content {
+  display: grid;
+}
+
+.navbar .dropdown-content::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 135px;
+  border-width: 0 25px 25px;
+  border-style: solid;
+  border-color: transparent transparent #ffffff transparent;
+  z-index: 2;
+}
+
+.navbar .dropdown-column {
+  padding: 5px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar .dropdown-column h4 {
+  margin: 0 0 10px;
+  color: #585858;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.navbar .dropdown-content a {
+  color: inherit;
+  text-decoration: none;
+  padding: 5px 0;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333;
+}
+
+.navbar .dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+.hamburger-menu {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+}
+
+.hamburger-menu .SvgIcon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.hamburger-menu:hover .SvgIcon {
+  transform: scale(1.2);
+}
+
+/* User Styles */
+.user-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  z-index: 10; /* เพิ่มค่า z-index */
+}
+
+.user-dropdown .user-avatar {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-dropdown .user-name {
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+}
+
+.user-dropdown .dropdown-content {
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  min-width: 150px;
+  z-index: 20; /* เพิ่มค่า z-index */
+}
+
+.user-dropdown .dropdown-content::before {
+  display: none;
+}
+
+.user-dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.user-dropdown .dropdown-content a {
+  display: block;
+  color: #333;
+  text-decoration: none;
+  padding: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.user-dropdown .dropdown-content a:hover {
+  background-color: #f1f1f1;
+  color: #c82021;
+}
+
+/* -------------------
+   Mobile Styles
+------------------- */
+@media (max-width: 980px) {
+  .navbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+  }
+
+  .navbar__logo {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .navbar__logo .logo {
+    max-width: 120px;
+    height: auto;
+  }
+
+  .navbar__menu-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .hamburger-menu {
+    display: block;
+  }
+
+  .sign-in {
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
+    margin-right: 10px;
+    font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto,
+      "Droid Sans", Helvetica, Arial, sans-serif;
+    font-weight: bold;
+  }
+
+  .mobile-menu {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    color: #333;
+    width: 100%;
+    padding: 15px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  .mobile-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .mobile-menu ul li {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .mobile-menu ul li:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-menu ul li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .mobile-menu ul li a:hover {
+    color: #c82021;
+  }
+}

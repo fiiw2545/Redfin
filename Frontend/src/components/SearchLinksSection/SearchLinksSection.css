@@ -1,0 +1,103 @@
+.search-links-section {
+    padding: 40px 60px;
+    font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto, Droid Sans, Helvetica, Arial, sans-serif;
+}
+
+.search-category {
+    margin-bottom: 30px;
+}
+
+.search-category h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.search-category h3 a {
+    color: #1080A2;
+    text-decoration: none;
+    font-weight: normal;
+    margin-left: 10px;
+    font-size: 16px;
+}
+
+.link-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    max-height: 150px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.link-columns.show {
+    max-height: none; /* แก้ไขจาก 500px เป็น none เพื่อให้ขยายตามเนื้อหา */
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.link-columns a {
+    color: #1080A2;
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+
+.show-more {
+    background: none;
+    border: none;
+    color: #1080A2;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 10px 0;
+    display: inline-flex; /* ทำให้ไอคอนและข้อความอยู่ในบรรทัดเดียวกัน */
+    align-items: center;
+    gap: 5px; /* เพิ่มช่องว่างระหว่างข้อความกับไอคอน */
+    margin: 0 auto;
+}
+
+.show-more:hover {
+    color: #005b99;
+}
+
+.expand-arrow {
+    fill: #1080A2; /* สีของลูกศร */
+    transition: transform 0.3s ease; /* เพิ่มแอนิเมชันในการหมุน */
+}
+
+.show-more:hover .expand-arrow {
+    fill: #005b99;
+}
+
+.show-more .expand-arrow {
+    transform: rotate(0deg);
+}
+
+.show-more.show .expand-arrow {
+    transform: rotate(180deg); /* หมุนลูกศรลงเมื่ออยู่ในสถานะ Show less */
+}
+
+.info-text {
+    font-size: 14px; /* ขนาดตัวอักษร */
+    color: #555; /* สีของข้อความ */
+    text-align: start; /* จัดให้อยู่ตรงกลาง */
+    max-width: 600px; /* ขนาดกว้างสุดของข้อความ */
+    margin: 20px auto; /* จัดให้อยู่ตรงกลางและมีช่องว่างด้านบน/ล่าง */
+    line-height: 1.6; /* เพิ่มความสูงของบรรทัดให้อ่านง่าย */
+}
+
+.info-text a {
+    color: #1080A2; /* สีของลิงก์ */
+    text-decoration: none;
+}
+
+.info-text a:hover {
+    color: #005b99; /* สีของลิงก์เมื่อ hover */
+}
+

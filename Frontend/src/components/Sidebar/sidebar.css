@@ -1,0 +1,180 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 75%; /* ใช้ 75% ของหน้าจอเพื่อให้กระชับ */
+    max-width: 320px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+}
+
+.sidebar__logo {
+    max-width: 140px;
+    height: auto;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover {
+    color: #C82021;
+}
+
+.sidebar__content {
+    padding: 20px;
+    overflow-y: auto; /* เปิดใช้งานการเลื่อน */
+    max-height: calc(100vh - 60px); /* จำกัดความสูงให้อยู่ใน viewport ลบพื้นที่ header */
+    box-sizing: border-box; /* รวม padding ในการคำนวณขนาด */
+}
+
+.sidebar__content h3 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+    padding-left: 0; /* ไม่มีการเยื้องซ้าย */
+}
+
+/* จัดการรายการใน primaryItems และ secondaryItems */
+.primaryItems, .secondaryItems {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px; /* เว้นระยะด้านล่างกลุ่ม */
+}
+
+.primaryItems li, .secondaryItems li {
+    display: flex;
+    align-items: center;
+    padding: 12px 0; /* เว้นระยะห่างแนวตั้ง */
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.primaryItems li:last-child, .secondaryItems li:last-child {
+    border-bottom: none;
+}
+
+.primaryItems li a, .secondaryItems li a {
+    text-decoration: none;
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px; /* เพิ่มระยะห่างระหว่างไอคอนและข้อความ */
+    width: 100%; /* คลิกได้ทั้งพื้นที่ */
+    transition: color 0.3s ease;
+}
+
+.primaryItems li a:hover, .secondaryItems li a:hover {
+    color: #C82021;
+}
+
+.primaryItems li svg, .secondaryItems li svg {
+    width: 24px;
+    height: 24px;
+    fill: #333;
+    flex-shrink: 0; /* ป้องกันไอคอนหดตัว */
+    margin-right: 12px; /* ระยะห่างระหว่างไอคอนกับข้อความ */
+    transition: fill 0.3s ease;
+}
+
+.primaryItems li a:hover svg, .secondaryItems li a:hover svg {
+    fill: #C82021;
+}
+
+.secondaryItems {
+    list-style: none;
+    padding: 0; /* รีเซ็ต padding */
+    margin: 0; /* รีเซ็ต margin */
+}
+
+.secondaryItems li {
+    display: flex;
+    align-items: center;
+    padding: 12px 0; /* ระยะห่างแนวตั้ง */
+    border-bottom: 1px solid #f0f0f0;
+    margin: 0; /* ลบ margin เกิน */
+    padding-left: 0; /* ลบการเยื้องซ้าย */
+}
+
+.secondaryItems li a {
+    text-decoration: none;
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px; /* ระยะห่างระหว่างไอคอนและข้อความ */
+    width: 100%; /* คลิกได้ทั้งพื้นที่ */
+    padding-left: 0; /* ลบการเยื้องซ้ายของลิงก์ */
+    transition: color 0.3s ease;
+}
+
+.secondaryItems li svg {
+    width: 24px;
+    height: 24px;
+    fill: #333;
+    flex-shrink: 0; /* ป้องกันไอคอนหดตัว */
+    margin-right: 12px; /* ระยะห่างระหว่างไอคอนกับข้อความ */
+    transition: fill 0.3s ease;
+}
+
+/* สไตล์สำหรับหน้าจอขนาดเล็ก */
+@media (max-width: 980px) {
+    .sidebar {
+        width: 90%; /* ใช้ 90% ของหน้าจอสำหรับมือถือ */
+    }
+
+    .sidebar__header {
+        padding: 10px 15px;
+    }
+
+    .sidebar__content {
+        padding: 15px;
+        max-height: calc(100vh - 50px); /* ลด header space สำหรับจอเล็ก */
+    }
+
+    .primaryItems li, .secondaryItems li {
+        padding: 10px 15px; /* ลด padding */
+    }
+
+    .primaryItems li a, .secondaryItems li a {
+        font-size: 14px;
+    }
+
+    .primaryItems li svg, .secondaryItems li svg {
+        width: 20px;
+        height: 20px;
+    }
+    .secondaryItems li {
+        padding-left: 0; /* รีเซ็ตการเยื้องซ้าย */
+    }
+
+    .secondaryItems li a {
+        padding-left: 0; /* รีเซ็ตการเยื้องซ้าย */
+    }
+}

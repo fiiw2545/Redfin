@@ -1,0 +1,196 @@
+/* Footer container */
+.footer {
+  padding: 50px 0px;
+  color: #333;
+  font-size: 14px;
+  font-family: "Libre Franklin", sans-serif;
+}
+
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto; /* ใช้ auto ตรงกลางเฉพาะหน้าจอขนาดใหญ่ */
+  gap: 20px;
+  padding: 0 20px; /* เพิ่ม padding ด้านข้างสำหรับหน้าจอเล็ก */
+}
+
+.footer-column {
+  flex: 1;
+  min-width: 155px;
+  margin-bottom: 20px;
+}
+
+.footer-column:nth-child(4) {
+  flex-basis: 600px; 
+}
+
+/* Column header */
+.footer-column h4 {
+  font-size: 16px; 
+  font-weight: bold;
+  margin-bottom: 15px;
+  font-family: "Libre Franklin", sans-serif; 
+  color: #565656;
+}
+
+.footer-column p {
+  font-size: 12px; 
+  font-weight: lighter;
+  margin-bottom: 25px;
+  font-family: "Libre Franklin", sans-serif; 
+  color: #565656;
+}
+
+.footer-column a {
+  font-size: 12px;
+  margin-bottom: 15px;
+  font-family: "Libre Franklin", sans-serif; 
+  color: #565656;
+}
+
+/* List reset */
+.footer-column ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-column li {
+  margin-bottom: 20px;
+  font-family: "Libre Franklin", sans-serif; 
+}
+
+.footer-column li a {
+  color: #333;
+  text-decoration: none;
+  font-family: "Libre Franklin", sans-serif; 
+}
+
+.footer-column li a:hover {
+  text-decoration: underline;
+}
+
+/* App download links */
+.app-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.app-links img {
+  width: 136px;
+}
+
+/* Social media links */
+.footer-socials {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.footer-socials a svg {
+  fill: #999;
+  transition: fill 0.3s ease;
+}
+
+.footer-socials a.facebook:hover svg {
+  fill: #3b5998;
+}
+
+.footer-socials a.twitter:hover svg {
+  fill: #000;
+}
+
+.footer-socials a.tiktok:hover svg {
+  fill: #000000;
+}
+
+.footer-socials a.instagram:hover svg {
+  fill: #E1306C;
+}
+
+.country-selector img {
+  width: 25px;
+  height: auto;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* Legal information */
+.footer-legal {
+  font-size: 12px; /* คง font-size */
+  font-family: "Libre Franklin", sans-serif; /* คง font-family */
+  line-height: 2;
+}
+
+.footer-legal p {
+  margin: 5px 0;
+}
+
+.footer-legal a {
+  color: #C82021;
+  text-decoration: none;
+  font-family: "Libre Franklin", sans-serif; /* คง font-family */
+}
+
+.footer-legal a:hover {
+  text-decoration: underline;
+}
+
+.housing-policy {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.housing-policy .icon.ehoLogo {
+  width: 48px; /* Adjust as necessary */
+  height: auto;
+  margin-right: 10px; /* Space between icon and text */
+}
+
+.housing-policy .bold-text p {
+  margin: 0;
+  line-height: 1.5;
+  font-weight: bold !important;
+  font-family: "Libre Franklin", sans-serif; /* คง font-family */
+}
+
+/* Responsive Styles */
+@media (max-width: 980px) {
+  .footer-container {
+    flex-direction: column;
+    align-items: flex-start; /* จัดให้อยู่ทางซ้าย */
+    padding: 0 30px; /* เพิ่ม padding ด้านข้าง */
+  }
+
+  .footer-column {
+    flex: 1;
+    width: 100%; /* กำหนดให้ใช้พื้นที่เต็ม */
+    margin-bottom: 20px;
+  }
+
+  .footer-column h4 {
+    margin-top: 20px;
+    font-family: "Libre Franklin", sans-serif; /* คง font-family */
+  }
+
+  .footer-legal {
+    font-size: 12px;
+    line-height: 2;
+    padding: 0 10px; /* เพิ่ม padding ซ้ายขวาสำหรับหน้าจอเล็ก */
+    font-family: "Libre Franklin", sans-serif; /* คง font-family */
+  }
+
+  .footer-legal p,
+  .footer-legal a {
+    text-align: left; /* จัดเนื้อหาให้อยู่ทางซ้าย */
+  }
+
+  .app-links img {
+    width: 120px; /* ลดขนาดไอคอนเมื่อหน้าจอเล็ก */
+  }
+}

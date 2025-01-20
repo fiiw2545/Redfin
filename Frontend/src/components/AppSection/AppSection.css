@@ -1,0 +1,60 @@
+/* AppSection.css */
+.app-section {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    padding: 80px 120px;
+    width: 1500px;
+    margin: 0 auto;
+    align-items: center;
+}
+
+.app-download, .tour-section {
+    display: flex;
+    align-items: center;
+    gap: 100px;
+}
+
+.text-content {
+    max-width: 500px;
+}
+
+.text-content h2, .tour-content h2 {
+    font-size: 36px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.text-content p, .tour-content p {
+    color: #666;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.qr-content {
+    position: relative;
+}
+
+.qr-code {
+    width: 580px; 
+}
+
+.app-preview, .tour-image img {
+    width: 600px;
+}
+
+.tour-content {
+    max-width: 500px;
+}
+
+.search-button {
+    background-color: #c82021;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Libre Franklin', -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif;
+    font-weight: bold;
+}
