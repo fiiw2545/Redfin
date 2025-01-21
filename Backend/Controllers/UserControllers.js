@@ -62,8 +62,8 @@ const registerUser = async (req, res) => {
   }
 };
 
-// ฟังก์ชันตั้งรหัสผ่านใหม่
-const resetPassword = async (req, res) => {
+// ฟังก์ชันตั้งรหัสผ่าน
+const setPassword = async (req, res) => {
   const token = req.params.token || req.body.token;
   const { newPassword } = req.body; // รับ newPassword จาก body
   console.log("Request params:", req.params);
@@ -214,11 +214,78 @@ const googleLogin = async (req, res) => {
   }
 };
 
+//ฟังก์ชันลืมรหัสผ่าน
+const forgotPassword = async (req, res) => {
+  const { email } = req.body; // รับ email จาก body
+
+  try {
+    // ตรวจสอบว่าอีเมลนี้มีอยู่ในฐานข้อมูลหรือไม่
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    // สร้าง Token สำหรับ Reset Password
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpires = Date.now() + 3600000; // Token หมดอายุใน 1 ชั่วโมง
+
+    // บันทึก Token และเวลาหมดอายุในฐานข้อมูล
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpires = resetTokenExpires;
+    await user.save();
+
+    // กำหนด URL สำหรับ Reset Password
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+
+    // ตั้งค่า Nodemailer สำหรับส่งอีเมล
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // ผู้ส่งอีเมล (จาก .env)
+        pass: process.env.EMAIL_PASS, // รหัสผ่านอีเมล (จาก .env)
+      },
+    });
+
+    // กำหนดเนื้อหาอีเมล
+    const mailOptions = {
+      from: "no-reply@yourdomain.com",
+      to: email,
+      subject: "Reset Your Password",
+      html: `
+        <p>Hi ${user.name || "User"},</p>
+        <p>You requested a password reset. Click the link below to reset your password:</p>
+        <a href="${resetUrl}">Reset Password</a>
+        <p>If you didn't request this, please ignore this email.</p>
+      `,
+    };
+
+    // ส่งอีเมล
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "Password reset email has been sent!" });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+
+    // กรณีเกิดข้อผิดพลาดในการส่งอีเมล
+    if (error.response) {
+      return res.status(500).json({
+        message:
+          "Failed to send email. Please check the email server configuration.",
+        error: error.response,
+      });
+    }
+
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
   loginUser,
   verifyEmail,
-  resetPassword,
+  setPassword,
   googleLogin,
+  forgotPassword,
 };

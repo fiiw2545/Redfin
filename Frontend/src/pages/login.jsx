@@ -129,6 +129,32 @@ const LoginPage = () => {
     }
   };
 
+  // ลืมรหัสผ่าน
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/forgot-password",
+        { email }
+      );
+
+      if (response.status === 200) {
+        alert("A password reset email has been sent!");
+      } else {
+        alert(response.data.message || "Failed to send reset email.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      if (error.response && error.response.data) {
+        alert(error.response.data.message || "Failed to send reset email.");
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    }
+  };
+
   const toggleSignUp = () => {
     setIsSignUp(!isSignUp);
   };
@@ -337,7 +363,7 @@ const LoginPage = () => {
                 <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
               </div>
 
-              <form style={styles.form}>
+              <form style={styles.form} onSubmit={handleResetPassword}>
                 <div style={styles.formGroup}>
                   <label htmlFor="email" style={styles.label}>
                     Email Address:
@@ -426,6 +452,11 @@ const styles = {
     marginBottom: "20px",
     textAlign: "left",
   },
+  subtitleforgot: {
+    fontSize: "14px",
+    marginBottom: "10px",
+    textAlign: "left",
+  },
   link: {
     color: "#1080A2",
     textDecoration: "none",
@@ -497,9 +528,10 @@ const styles = {
       '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
   },
   terms: {
-    fontSize: "14px",
+    fontSize: "12px",
     color: "#333333",
     marginTop: "20px",
+    textAlign: "left",
   },
 };
 
