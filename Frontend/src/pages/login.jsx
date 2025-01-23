@@ -55,7 +55,7 @@ const LoginPage = () => {
 
   // State สำหรับ Sign-Up
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
     lastName: "",
     email: "",
   });
@@ -132,12 +132,13 @@ const LoginPage = () => {
   // ลืมรหัสผ่าน
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    const email = e.target.email.value;
+    const email = e.target.email.value; // รับ email จาก input
 
     try {
+      // เรียก API โดยไม่ต้องใช้ token ใน URL
       const response = await axios.post(
-        "http://localhost:5000/api/users/forgot-password",
-        { email }
+        `http://localhost:5000/api/users/forgot-password`, // แก้ไขเส้นทางไม่ใส่ :token
+        { email } // ส่งอีเมลใน body
       );
 
       if (response.status === 200) {
@@ -281,13 +282,13 @@ const LoginPage = () => {
 
               <form style={styles.form} onSubmit={handleSignUpSubmit}>
                 <div style={styles.formGroup}>
-                  <label htmlFor="fullName" style={styles.label}>
-                    Full Name:
+                  <label htmlFor="firstName" style={styles.label}>
+                    FirstName:
                   </label>
                   <input
                     type="text"
-                    id="fullName"
-                    name="fullName"
+                    id="firstName"
+                    name="firstName"
                     style={styles.input}
                     value={formData.fullName}
                     onChange={handleInputChange}

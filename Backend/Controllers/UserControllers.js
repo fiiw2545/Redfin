@@ -8,7 +8,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ฟังก์ชันสมัครสมาชิกพร้อมยืนยันอีเมล
 const registerUser = async (req, res) => {
-  const { fullName, lastName, email } = req.body;
+  const { firstName, lastName, email } = req.body;
 
   try {
     // Step 1: ตรวจสอบว่าอีเมลมีในระบบอยู่แล้วหรือไม่
@@ -19,7 +19,7 @@ const registerUser = async (req, res) => {
 
     // Step 2: สร้างผู้ใช้ใหม่
     const newUser = new User({
-      fullName,
+      firstName,
       lastName,
       email,
       isVerified: false,
@@ -42,7 +42,7 @@ const registerUser = async (req, res) => {
     await sendEmail(
       email,
       "Set Your Password",
-      `<h1>Welcome ${fullName}!</h1>
+      `<h1>Welcome ${newUser.firstName}!</h1>
        <p>Click the link below to set your password:</p>
        <a href="${resetLink}">Set Password</a>
        <p>This link will expire in 1 hour.</p>`
@@ -236,47 +236,29 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     // กำหนด URL สำหรับ Reset Password
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.CLIENT_URL}/resetpassword/${resetToken}`;
 
-    // ตั้งค่า Nodemailer สำหรับส่งอีเมล
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER, // ผู้ส่งอีเมล (จาก .env)
-        pass: process.env.EMAIL_PASS, // รหัสผ่านอีเมล (จาก .env)
-      },
+    // Step 5: ส่งลิงก์ยืนยันอีเมล
+    await sendEmail(
+      email,
+      "Set Your Password",
+      `<h1>Welcome ${user.firstName}!</h1>
+       <p>Click the link below to set your password:</p>
+       <a href="${resetUrl}">Set Password</a>
+       <p>This link will expire in 1 hour.</p>`
+    );
+
+    // Step 6: ส่งข้อมูลการตอบกลับ
+    res.status(201).json({
+      message: "Password reset email has been sent. Please check your email.",
+      token: resetToken,
+      resetLink: resetUrl, // ส่งลิงก์สำหรับการทดสอบ
     });
-
-    // กำหนดเนื้อหาอีเมล
-    const mailOptions = {
-      from: "no-reply@yourdomain.com",
-      to: email,
-      subject: "Reset Your Password",
-      html: `
-        <p>Hi ${user.name || "User"},</p>
-        <p>You requested a password reset. Click the link below to reset your password:</p>
-        <a href="${resetUrl}">Reset Password</a>
-        <p>If you didn't request this, please ignore this email.</p>
-      `,
-    };
-
-    // ส่งอีเมล
-    await transporter.sendMail(mailOptions);
-
-    res.json({ message: "Password reset email has been sent!" });
   } catch (error) {
-    console.error("Error in forgotPassword:", error);
-
-    // กรณีเกิดข้อผิดพลาดในการส่งอีเมล
-    if (error.response) {
-      return res.status(500).json({
-        message:
-          "Failed to send email. Please check the email server configuration.",
-        error: error.response,
-      });
-    }
-
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({
+      message: "เกิดข้อผิดพลาดในการสมัครสมาชิก!",
+      error: error.message,
+    });
   }
 };
 

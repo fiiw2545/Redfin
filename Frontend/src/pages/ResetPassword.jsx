@@ -11,44 +11,50 @@ const ResetPasswordPage = () => {
   const { token } = useParams(); // รับ token จาก URL
   const navigate = useNavigate();
 
-  // ฟังก์ชันในการส่งคำขอตั้งรหัสผ่านใหม่
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ฟังก์ชันตรวจสอบความปลอดภัยของรหัสผ่าน
+  const validatePassword = (password) => {
+    const passwordRegex =
+      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$&*?])[A-Za-z\d!#$&*?]{8,}$/;
+    return passwordRegex.test(password);
+  };
 
-    // ตรวจสอบว่ารหัสผ่านทั้งสองตรงกันหรือไม่
+  // ฟังก์ชันจัดการเมื่อส่งฟอร์ม
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // ป้องกันการ reload หน้าเว็บ
+
+    // ตรวจสอบความปลอดภัยของรหัสผ่าน
+    if (!validatePassword(password)) {
+      setError(
+        "Password must be at least 8 characters long, include a number, a special character, and a letter."
+      );
+      return;
+    }
+
+    // ตรวจสอบว่ารหัสผ่านทั้งสองตรงกัน
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
       return;
     }
 
+    setError(""); // ล้างข้อความ error ก่อนหน้า
     setIsLoading(true);
-    try {
-      // ส่งคำขอ POST ไปยัง API สำหรับการตั้งรหัสผ่าน
-      const response = await axios.post(
-        `/api/users/reset-password/${token}`, // URL API ที่ต้องการส่งคำขอไป
-        { password } // ส่งรหัสผ่านใน request body
-      );
 
-      // ถ้าคำขอสำเร็จ
-      if (response.status === 200) {
-        setSuccessMessage("Password set successfully!");
-        setTimeout(() => {
-          navigate("/login"); // นำทางไปหน้า Login หลังจาก 3 วินาที
-        }, 3000);
-      }
-    } catch (err) {
-      // ถ้ามีข้อผิดพลาด
-      setError(
-        err.response?.data?.message ||
-          "There was an error setting your password!"
-      );
+    try {
+      const apiUrl = `http://localhost:5000/api/users/reset-password/${token}`;
+      const response = await axios.post(apiUrl, { newPassword: password });
+
+      // ถ้าสำเร็จ
+      setSuccessMessage(response.data.message || "Password reset successful!");
+      setTimeout(() => navigate("/login"), 3000); // นำทางไปหน้า login หลัง 3 วินาที
+    } catch (error) {
+      setError(error.response?.data?.message || "Error resetting password.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
       <h2>Reset Password</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
@@ -60,6 +66,7 @@ const ResetPasswordPage = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter new password"
             required
           />
         </div>
@@ -69,6 +76,7 @@ const ResetPasswordPage = () => {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm new password"
             required
           />
         </div>
