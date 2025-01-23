@@ -121,6 +121,14 @@ const loginUser = async (req, res) => {
       expiresIn: "1h",
     });
 
+    // เก็บ token ไว้ใน cookies
+    res.cookie("token", token, {
+      httpOnly: true, // ป้องกันการเข้าถึงจาก JavaScript
+      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ใน production
+      maxAge: 3600 * 1000, // เวลาหมดอายุ 1 ชั่วโมง
+      sameSite: "Strict", // ป้องกันการใช้คุกกี้จาก cross-site request
+    });
+
     res.status(200).json({
       message: "Login successful!",
       token,
@@ -134,6 +142,19 @@ const loginUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Error logging in!" });
   }
+};
+
+//ฟังก์ชันออกจากระบบ
+const logoutUser = (req, res) => {
+  // ลบ token ใน cookies โดยตั้งค่าใหม่ให้หมดอายุทันที
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    expires: new Date(0), // หมดอายุทันที
+  });
+
+  res.status(200).json({ message: "Logout successful!" });
 };
 
 // ฟังก์ชันยืนยันอีเมล
@@ -262,12 +283,33 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+//ฟังก์ชันดึงอีเมลจากToken
+const getEmailFromToken = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // ค้นหา Token ในฐานข้อมูล
+    const user = await User.findOne({ passwordResetToken: token });
+    if (!user) {
+      return res.status(404).json({ message: "Invalid or expired token" });
+    }
+
+    // ส่งอีเมลกลับไป
+    res.status(200).json({ email: user.email });
+  } catch (error) {
+    console.error("Error fetching email:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   verifyEmail,
   setPassword,
   googleLogin,
   forgotPassword,
+  getEmailFromToken,
 };

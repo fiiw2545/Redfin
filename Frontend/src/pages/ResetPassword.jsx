@@ -10,6 +10,7 @@ const ResetPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { token } = useParams();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("Loading..."); // เพิ่ม state สำหรับอีเมล
   const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -49,6 +50,38 @@ const ResetPasswordPage = () => {
     }
   };
 
+  // ฟังก์ชันสำหรับดึงอีเมลจาก backend
+  useEffect(() => {
+    const fetchEmail = async () => {
+      if (!token) {
+        console.error("Token is missing or undefined.");
+        setEmail("Unknown User");
+        return;
+      }
+
+      console.log("Token:", token);
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/users/email/${token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // ใช้ token เป็น Bearer token
+            },
+          }
+        );
+        setEmail(response.data.email || "Unknown User");
+      } catch (error) {
+        console.error(
+          "Error fetching email:",
+          error.response?.data || error.message
+        );
+        setEmail("Unknown User");
+      }
+    };
+
+    fetchEmail();
+  }, [token]); // useEffect จะทำงานเมื่อ token เปลี่ยนค่า
+
   return (
     <div style={styles.global}>
       <Navbar />
@@ -69,6 +102,9 @@ const ResetPasswordPage = () => {
               {message}
             </p>
           )}
+          <p>
+            Update the password for <strong>{email}</strong>
+          </p>
           <div style={styles.requirements}>
             <p>Password must include:</p>
             <ul style={styles.list}>

@@ -1,11 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGlobalEvent } from "../context/GlobalEventContext";
-import { useParams } from "react-router-dom"; // ใช้เพื่อดึง token จาก URL
+import { useParams } from "react-router-dom";
 import axios from "axios";
-
 import Navbar from "../components/Navbar/Navbar";
-
-import googleIcon from "../img/google-icon.png";
 
 const SetPasswordPage = () => {
   const { windowSize } = useGlobalEvent();
@@ -15,13 +12,48 @@ const SetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("Loading..."); // เพิ่ม state สำหรับอีเมล
 
+  // ฟังก์ชันสำหรับดึงอีเมลจาก backend
+  useEffect(() => {
+    const fetchEmail = async () => {
+      if (!token) {
+        console.error("Token is missing or undefined.");
+        setEmail("Unknown User");
+        return;
+      }
+
+      console.log("Token:", token);
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/users/email/${token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // ใช้ token เป็น Bearer token
+            },
+          }
+        );
+        setEmail(response.data.email || "Unknown User");
+      } catch (error) {
+        console.error(
+          "Error fetching email:",
+          error.response?.data || error.message
+        );
+        setEmail("Unknown User");
+      }
+    };
+
+    fetchEmail();
+  }, [token]); // useEffect จะทำงานเมื่อ token เปลี่ยนค่า
+
+  // ตรวจสอบความถูกต้องของ Password
   const validatePassword = (password) => {
     const passwordRegex =
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!#$&*?])[A-Za-z\d!#$&*?]{8,}$/;
     return passwordRegex.test(password);
   };
 
+  // ฟังก์ชัน Reset Password
   const resetPassword = async () => {
     if (!validatePassword(newPassword)) {
       setMessage("Password does not meet requirements!");
@@ -34,9 +66,6 @@ const SetPasswordPage = () => {
 
     try {
       const apiUrl = `http://localhost:5000/api/users/reset-password/${token}`;
-      console.log("Sending request to URL:", apiUrl); // ตรวจสอบ URL
-      console.log("Request body:", { newPassword }); // ตรวจสอบข้อมูลที่ส่ง
-
       const response = await axios.post(apiUrl, { newPassword });
       setMessage(response.data.message || "Password reset successful!");
     } catch (error) {
@@ -65,6 +94,10 @@ const SetPasswordPage = () => {
               {message}
             </p>
           )}
+          <p>
+            Update the password for <strong>{email}</strong>
+          </p>
+
           <div style={styles.requirements}>
             <p>Password must include:</p>
             <ul style={styles.list}>
@@ -111,7 +144,6 @@ const styles = {
     padding: 0,
     boxSizing: "border-box",
   },
-
   PageBody: {
     backgroundImage:
       "url(https://images.hdqwalls.com/download/sunset-at-st-mary-lake-glacier-national-park-5k-l3-1600x900.jpg)",
@@ -146,18 +178,10 @@ const styles = {
     marginBottom: "10px",
     textAlign: "left",
   },
-  subtitle: {
-    fontSize: "16px",
-    marginBottom: "20px",
-    textAlign: "left",
-  },
   form: {
     display: "flex",
     flexDirection: "column",
     gap: "15px",
-  },
-  formGroup: {
-    marginBottom: "10px",
   },
   input: {
     width: "100%",
@@ -175,8 +199,6 @@ const styles = {
     borderRadius: "2px",
     cursor: "pointer",
     fontWeight: "600",
-    fontFamily:
-      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
   },
 };
 
