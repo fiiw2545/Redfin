@@ -200,13 +200,13 @@ const googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // สร้างผู้ใช้ใหม่ พร้อมตั้ง isVerified เป็น true
+      // สร้างผู้ใช้ใหม่
       user = await User.create({
         email,
         firstName: firstName,
         lastName,
         profileImage: picture,
-        isVerified: true, // ตั้งค่า isVerified เป็น true
+        isVerified: false, // ตั้งค่า isVerified เป็น true
       });
     } else {
       // หากผู้ใช้อยู่แล้ว ให้มั่นใจว่า isVerified เป็น true

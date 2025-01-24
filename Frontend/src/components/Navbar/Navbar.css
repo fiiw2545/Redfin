@@ -189,8 +189,15 @@
   object-fit: cover;
 }
 
-.user-dropdown .user-name {
+.user-dropdown .user-name--home {
   color: #333;
+  font-weight: 500;
+  font-size: 14px;
+  position: relative;
+}
+
+.user-dropdown .user-name {
+  color: #ffffff;
   font-weight: 500;
   font-size: 14px;
   position: relative;

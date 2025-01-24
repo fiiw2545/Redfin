@@ -1,8 +1,6 @@
 import React from "react";
 import "./Modal.css";
 import googleIcon from "../../img/google-icon.png";
-import facebookIcon from "../../img/facebook-icon.png";
-import appleIcon from "../../img/apple-icon.png";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
 
