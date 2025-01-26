@@ -3,9 +3,202 @@ import Navbar from "../components/Navbar/Navbar";
 import NavbarUser from "../components/NavbarUser/NavbarUser";
 import googleIcon from "../img/google-icon.png";
 import Footer from "../components/Footer/Footer";
-import { useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+
 const AccountSettings = () => {
+  const [userEmail, setUserEmail] = useState(""); // ตัวแปรสำหรับเก็บอีเมลผู้ใช้
   const [selectedValue, setSelectedValue] = useState("");
+  const [email, setEmail] = useState("");
+  const [userData, setUserData] = useState(null); // ตัวแปรสำหรับเก็บข้อมูลผู้ใช้
+  const [showGoogleLogin, setShowGoogleLogin] = useState(false); //เพื่อควบคุมการแสดงปุ่ม GoogleLogin
+  //`http://localhost:5000/api/users/information/${email}`
+  // ฟังก์ชันดึงข้อมูลผู้ใช้
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/users/information",
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("User data received:", response.data);
+      setUserData(response.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []); // เรียก fetchUsers เมื่อ component ถูก mount
+
+  // ส่งอีเมลยืนยันอีกครั้ง
+  const handleResendEmail = (e) => {
+    e.preventDefault(); // ป้องกันการโหลดหน้าใหม่
+
+    if (!userEmail) {
+      alert("User email is not set. Please try again.");
+      return;
+    }
+
+    axios
+      .post(`http://localhost:5000/api/users/resend-email`, {
+        email: userEmail, // ใส่อีเมลผู้ใช้ที่ต้องการส่ง
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          alert("Email has been resent successfully!");
+        } else {
+          alert("Failed to resend email. Please try again.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while resending the email.");
+      });
+  };
+
+  //อัพเดทรูปภาพ
+  const handleUpdateProfilePicture = async (imageData) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/update-profile-picture",
+        {
+          userId: userData.id, // หรือค่า ID ของผู้ใช้
+          profilePicture: imageData,
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Profile picture updated successfully!");
+        setUserData((prevData) => ({
+          ...prevData,
+          profilePicture: imageData,
+        }));
+      } else {
+        alert("Failed to update profile picture.");
+      }
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      alert("An error occurred while updating the profile picture.");
+    }
+  };
+
+  // เปลี่ยนรูปภาพ
+  const handleChangePhoto = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // แสดงรูปภาพที่เลือก
+        const imgElement = document.getElementById("profileImage");
+        imgElement.src = reader.result; // แสดงรูปใหม่
+        handleUpdateProfilePicture(reader.result); //อัพเดทรูปในฐานข้อมูล
+      };
+      reader.readAsDataURL(file); // แปลงไฟล์เป็น Data URL เพื่อแสดงใน HTML
+    }
+  };
+
+  // ลบรูปภาพ
+  const handleRemovePhoto = async () => {
+    const defaultImage = "https://your-default-image-url.com";
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/update-profile-picture",
+        {
+          userId: userData.id, // หรือค่า ID ของผู้ใช้
+          profilePicture: defaultImage,
+        }
+      );
+
+      if (response.status === 200) {
+        const imgElement = document.getElementById("profileImage");
+        imgElement.src = defaultImage; // แสดงรูปเริ่มต้นในหน้าจอ
+        alert("Profile picture removed successfully!");
+      } else {
+        alert("Failed to remove profile picture.");
+      }
+    } catch (error) {
+      console.error("Error removing profile picture:", error);
+      alert("An error occurred while removing the profile picture.");
+    }
+  };
+
+  //อัพเดทข้อมูล
+  const handleSaveUpdates = async (e) => {
+    e.preventDefault(); // ป้องกันการโหลดหน้าใหม่
+
+    const updatedData = {
+      firstName: document.getElementById("firstNameInput").value,
+      lastName: document.getElementById("lastNameInput").value,
+      email: document.getElementById("emailInput").value,
+    };
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/users/update`, // URL ของ API
+        updatedData // ส่งข้อมูลที่แก้ไข
+      );
+
+      if (response.status === 200) {
+        alert("Profile updated successfully!");
+      } else {
+        alert("Failed to update profile. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("An error occurred while updating the profile.");
+    }
+  };
+
+  // ฟังก์ชันสำหรับการคลิกที่ลิงก์ "Use Google Photo"
+  useEffect(() => {
+    // โหลด Google API client library
+    const script = document.createElement("script");
+    script.src = "https://apis.google.com/js/api.js";
+    script.async = true;
+    script.onload = initGoogleAuth;
+    document.body.appendChild(script);
+
+    function initGoogleAuth() {
+      window.gapi.load("auth2", () => {
+        window.gapi.auth2.init({
+          client_id:
+            "1054484762553-vi888hr1qncq3v3ofrradfrff67t71dl.apps.googleusercontent.com", // ใส่ clientId ของคุณที่นี่
+          scope: "https://www.googleapis.com/auth/photoslibrary.readonly", // เพิ่ม scope สำหรับ Google Photos
+        });
+      });
+    }
+  }, []);
+
+  // ฟังก์ชันเปิดหน้าต่าง Google OAuth2
+  const handleClick = (e) => {
+    e.preventDefault(); // ป้องกันการรีเฟรชหน้า
+
+    const auth2 = window.gapi.auth2.getAuthInstance();
+
+    // ตรวจสอบว่า auth2 instance โหลดเสร็จแล้ว
+    if (auth2) {
+      // เรียกใช้การล็อกอิน
+      auth2
+        .signIn()
+        .then((response) => {
+          console.log("Login Success:", response);
+          // คุณสามารถดึงข้อมูลที่จำเป็นจาก response ได้ เช่น
+          // const profile = response.getBasicProfile();
+          // const idToken = response.getAuthResponse().id_token;
+        })
+        .catch((error) => {
+          console.error("Login Failed:", error);
+        });
+    } else {
+      console.error("Google API auth2 instance is not initialized.");
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -35,11 +228,20 @@ const AccountSettings = () => {
                 you can see all home details.
               </span>
               <span style={styles.alertLinks}>
-                <a href="#verify" style={styles.alertLink}>
+                <a
+                  href="https://mail.google.com"
+                  target="_blank"
+                  style={styles.alertLink}
+                >
                   Go to Email
                 </a>
+
                 <span> • </span>
-                <a href="#resend" style={styles.alertLink}>
+                <a
+                  href="#resend"
+                  style={styles.alertLink}
+                  onClick={handleResendEmail}
+                >
                   Resend Email
                 </a>
               </span>
@@ -53,19 +255,43 @@ const AccountSettings = () => {
           <div style={styles.profileSection}>
             <div style={styles.avatarContainer}>
               <img
-                src="https://images.hdqwalls.com/download/sunset-at-st-mary-lake-glacier-national-park-5k-l3-1600x900.jpg"
+                id="profileImage"
+                src={
+                  userData?.profilePicture ||
+                  "https://your-default-image-url.com"
+                }
                 alt="Profile"
                 style={styles.avatar}
               />
             </div>
+
             <div style={styles.photoActions}>
-              <a href="#" style={styles.photoLink}>
+              {/* ลิงก์ Use Google Photo */}
+              <a
+                href="#"
+                style={styles.photoLink}
+                onClick={handleClick} // เมื่อคลิกให้แสดง Google Login
+              >
                 Use Google Photo
               </a>
-              <a href="#" style={styles.photoLink}>
+
+              {/* การเปลี่ยนรูปภาพ */}
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                id="fileInput"
+                onChange={handleChangePhoto}
+              />
+              <a
+                href="#"
+                onClick={() => document.getElementById("fileInput").click()}
+                style={styles.photoLink}
+              >
                 Change Photo
               </a>
-              <a href="#" style={styles.photoLink}>
+              {/* การลบรูปภาพ */}
+              <a href="#" onClick={handleRemovePhoto} style={styles.photoLink}>
                 Remove
               </a>
             </div>
@@ -75,19 +301,30 @@ const AccountSettings = () => {
             <div style={styles.formRow}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>First Name *</label>
-                <input type="text" defaultValue="Nyx" style={styles.input} />
+                <input
+                  id="firstNameInput"
+                  type="text"
+                  defaultValue={userData?.firstName || ""} // ใช้ค่าจาก userData หรือช่องว่าง
+                  style={styles.input}
+                />
               </div>
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Last Name *</label>
-                <input type="text" style={styles.input} />
+                <input
+                  id="lastNameInput"
+                  type="text"
+                  defaultValue={userData?.lastName || ""}
+                  style={styles.input}
+                />
               </div>
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Email Address *</label>
                 <input
+                  id="emailInput"
                   type="email"
-                  defaultValue="kantapongmini@gmail.com"
+                  defaultValue={userData?.email || ""}
                   style={styles.input}
                 />
               </div>
@@ -108,7 +345,7 @@ const AccountSettings = () => {
                         Type
                       </option>
                     )}
-                    <option value="cell">ฉell</option>
+                    <option value="cell">Cell</option>
                     <option value="home">Home</option>
                     <option value="office">Office</option>
                   </select>
@@ -122,7 +359,11 @@ const AccountSettings = () => {
               </div>
 
               <div style={styles.formGroup}>
-                <button type="submit" style={styles.saveButton}>
+                <button
+                  type="submit"
+                  style={styles.saveButton}
+                  onClick={handleSaveUpdates}
+                >
                   Save Updates
                 </button>
               </div>

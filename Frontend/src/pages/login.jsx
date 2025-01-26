@@ -90,7 +90,6 @@ const LoginPage = () => {
     }
   };
 
-  //ล็อคอิน
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     console.log("Login Submit Triggered");
@@ -103,17 +102,20 @@ const LoginPage = () => {
 
       if (response.status === 200) {
         alert(`Login successful: ${response.data.message}`);
+
+        // เก็บข้อมูลใน localStorage
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem(
           "user",
           JSON.stringify({
-            name: response.data.user.name, // สมมติว่าชื่อผู้ใช้มาจาก response.data.user.name
-            email: response.data.user.email, // หากต้องการเก็บอีเมล
-            profileImage: response.data.user.profileImage || null, // โปรไฟล์ภาพถ้ามี
+            name: response.data.user.name,
+            email: response.data.user.email, // เก็บ email ใน localStorage
+            profileImage: response.data.user.profileImage || null,
           })
         );
+
         console.log("Navigating to HomePage");
-        navigate("/");
+        navigate("/"); // ไปยังหน้า HomePage หรือหน้าอื่น ๆ
         return;
       }
     } catch (error) {

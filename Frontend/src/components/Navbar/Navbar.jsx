@@ -190,20 +190,22 @@ const Navbar = () => {
                     <div className="dropdown-content">
                       <div className="dropdown-column">
                         <h4>My redfin</h4>
-                        <a href="#">Favorites</a>
-                        <a href="#">Saved searches</a>
-                        <a href="#">Open house schedule</a>
-                        <a href="#">Appointments</a>
+                        <a href="/favorites">Favorites</a>
+                        <a href="/saved-searches">Saved searches</a>
+                        <a href="/open-house-schedule">Open house schedule</a>
+                        <a href="/appointments">Appointments</a>
                         <a href="#">Owner</a>
                         <a href="#">Dashboard</a>
-                        <a href="#">Agent</a>
-                        <a href="#">Offers</a>
-                        <a href="#">Reviews</a>
+                        <a href="/your-agent">Agent</a>
+                        <a href="/offers">Offers</a>
+                        <a href="/reviews">Reviews</a>
                       </div>
                       <div className="dropdown-column">
                         <h4>Settings</h4>
-                        <a href="#">Notification settings</a>
-                        <a href="#">Account settings</a>
+                        <a href="/notification-settings">
+                          Notification settings
+                        </a>
+                        <a href="/account-settings">Account settings</a>
                         <a href="#" onClick={handleSignOut}>
                           Sign out
                         </a>

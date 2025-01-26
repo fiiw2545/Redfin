@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const cors = require("cors");
 const userRoutes = require("./routes/UserRoutes");
+const cookieParser = require("cookie-parser");
 
 // โหลดค่าตัวแปรจาก .env
 dotenv.config();
@@ -15,7 +16,15 @@ const app = express();
 
 // Middleware
 app.use(express.json()); // แปลง JSON จาก request body
-app.use(cors()); // อนุญาตการเชื่อมต่อข้ามโดเมน (CORS)
+
+// กำหนดแหล่งที่มาที่อนุญาต (ให้ตรงกับ URL ของ frontend)
+const corsOptions = {
+  origin: "http://localhost:5173", // หรือ URL ของ frontend ของคุณ
+  credentials: true, // ให้ส่ง cookies ไปพร้อมกับคำขอ
+};
+app.use(cors(corsOptions)); // ใช้ CORS ด้วยตัวเลือกที่ตั้งค่าไว้
+
+app.use(cookieParser());
 
 // Routes
 app.use("/api/users", userRoutes);

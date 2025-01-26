@@ -87,7 +87,7 @@ const setPassword = async (req, res) => {
     user.password = hashedPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    user.isVerified = true; // เปลี่ยนสถานะเป็น Verified
+    user.isVerified = false; // เปลี่ยนสถานะเป็น Verified
     await user.save();
 
     res.json({ message: "Password reset successful!" });
@@ -158,24 +158,46 @@ const logoutUser = (req, res) => {
 };
 
 // ฟังก์ชันยืนยันอีเมล
-const verifyEmail = async (req, res) => {
-  const { token } = req.params;
+const resendEmail = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required." });
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found!" });
-    }
+    // สร้างตัวส่งอีเมลด้วย nodemailer
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // ใช้ Gmail เป็นตัวอย่าง
+      auth: {
+        user: process.env.EMAIL_USER, // อีเมลที่ใช้ส่ง (จาก .env)
+        pass: process.env.EMAIL_PASS, // รหัสผ่านแอป (จาก .env)
+      },
+    });
 
-    user.isVerified = true;
-    await user.save();
+    // กำหนดเนื้อหาอีเมล
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Email Confirmation",
+      html: `
+        <h3>Confirm Your Email</h3>
+        <p>Click the link below to confirm your email:</p>
+        <a href="${process.env.CLIENT_URL}/confirm-email?email=${email}">Confirm Email</a>
+      `,
+    };
 
-    res.status(200).json({ message: "Email verified successfully!" });
+    // ส่งอีเมล
+    await transporter.sendMail(mailOptions);
+
+    return res
+      .status(200)
+      .json({ message: "Email has been resent successfully." });
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Invalid or expired token!", error: error.message });
+    console.error("Error sending email:", error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while sending the email." });
   }
 };
 
@@ -302,14 +324,37 @@ const getEmailFromToken = async (req, res) => {
   }
 };
 
+//ฟังก์ชันดึงข้อมูล
+const getinformation = async (req, res) => {
+  try {
+    console.log("Decoded user from token:", req.user); // Debug
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      console.error("User not found for ID:", req.user.id); // Debug
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Error in getInformation:", error); // Debug
+    res.status(500).json({ message: "Internal server error!", error });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
-  verifyEmail,
+  resendEmail,
   setPassword,
   googleLogin,
   forgotPassword,
   getEmailFromToken,
+  getinformation,
 };
