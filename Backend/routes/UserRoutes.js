@@ -11,7 +11,7 @@ const {
   getEmailFromToken,
   getinformation,
 } = require("../Controllers/UserControllers"); // Import Controllers
-const { authenticateToken } = require("../Middleware/UserMiddleware");
+const { authenticateToken } = require("../middleware/UserMiddleware");
 
 const router = express.Router();
 

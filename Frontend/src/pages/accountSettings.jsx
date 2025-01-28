@@ -16,30 +16,32 @@ const AccountSettings = () => {
   const [showGoogleLogin, setShowGoogleLogin] = useState(false); //เพื่อควบคุมการแสดงปุ่ม GoogleLogin
   //`http://localhost:5000/api/users/information/${email}`
   // ฟังก์ชันดึงข้อมูลผู้ใช้
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5000/api/users/information",
-        {
-          withCredentials: true,
-        }
-      );
-      console.log("User data received:", response.data);
-      setUserData(response.data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchUsers();
-  }, []); // เรียก fetchUsers เมื่อ component ถูก mount
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/users/information/${email}`,
+          { withCredentials: true }
+        );
+
+        setUserData(response.data); // เก็บข้อมูลผู้ใช้ใน state
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // ส่งอีเมลยืนยันอีกครั้ง
   const handleResendEmail = (e) => {
     e.preventDefault(); // ป้องกันการโหลดหน้าใหม่
 
     if (!userEmail) {
+      console.log(
+        "User email is not set. Current value of userEmail:",
+        userEmail
+      );
       alert("User email is not set. Please try again.");
       return;
     }

@@ -97,24 +97,13 @@ const LoginPage = () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/users/login",
-        loginData
+        loginData,
+        { withCredentials: true }
       );
 
       if (response.status === 200) {
-        alert(`Login successful: ${response.data.message}`);
+        alert(`Login successful!`);
 
-        // เก็บข้อมูลใน localStorage
-        localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            name: response.data.user.name,
-            email: response.data.user.email, // เก็บ email ใน localStorage
-            profileImage: response.data.user.profileImage || null,
-          })
-        );
-
-        console.log("Navigating to HomePage");
         navigate("/"); // ไปยังหน้า HomePage หรือหน้าอื่น ๆ
         return;
       }

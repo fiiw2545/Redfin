@@ -1,23 +1,21 @@
-/* สไตล์สำหรับการแสดงพื้นหลังเบลอ */
+/* พื้นหลังเบลอของ Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* เพิ่มพื้นหลังโปร่งใสสีดำ */
+  background-color: rgba(0, 0, 0, 0.5); /* พื้นหลังโปร่งใสสีดำ */
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
-/* สไตล์สำหรับกล่องโมดอล */
+/* กล่อง Modal */
 .modal-content {
   background-color: #ffffff;
-  padding: 20px;
-  padding-left: 25px;
-  padding-right: 25px;
+  padding: 20px 25px; /* เพิ่มระยะขอบซ้ายและขวา */
   width: 300px;
   max-width: 90%;
   border-radius: 1px;
@@ -27,7 +25,7 @@
   margin: 0;
   display: flex;
   flex-direction: column; /* จัดเรียงในแนวตั้ง */
-  gap: 10px; /* ช่องว่างระหว่างแต่ละองค์ประกอบ */
+  gap: 10px; /* ระยะห่างระหว่างแต่ละองค์ประกอบ */
 }
 
 .modal-content h2 {
@@ -36,7 +34,7 @@
   margin: 0;
 }
 
-/* สไตล์สำหรับปุ่มปิด */
+/* ปุ่มปิด Modal */
 .modal-close {
   position: absolute;
   top: 10px;
@@ -48,31 +46,34 @@
   font-weight: lighter;
 }
 
-/* ปรับสไตล์ของช่องกรอก Email */
-.modal-content input[type="email"] {
+/* ช่องกรอก Email */
+.modal-content input[type="email"],
+input[type="password"],
+input[type="text"] {
   width: 100%;
   padding: 10px;
   font-size: 16px;
   box-sizing: border-box;
-  margin-bottom: 10px; /* ช่องว่างด้านล่างช่องกรอก */
+  margin-bottom: 5px; /* เว้นระยะห่างด้านล่าง */
 }
 
 .modal-content input[type="email"]::placeholder {
   color: #aaa;
 }
 
-/* สไตล์สำหรับปุ่มอีเมล */
+/* ปุ่มหลัก */
 .email-button {
   width: 100%;
   padding: 10px 8px 9px;
-  background-color: #C82021;
+  background-color: #c82021;
   color: #ffffff;
   border: none;
   border-radius: 2px;
   font-size: 16px;
   cursor: pointer;
   font-weight: bold;
-  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto, Droid Sans, Helvetica, Arial, sans-serif;
+  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto,
+    Droid Sans, Helvetica, Arial, sans-serif;
   border-color: #888;
 }
 
@@ -82,7 +83,6 @@
   align-items: center;
   text-align: center;
   color: #888;
-  
 }
 
 .separator::before,
@@ -97,59 +97,51 @@
   color: #888;
 }
 
-/* สไตล์สำหรับปุ่มลงชื่อเข้าใช้ด้วยโซเชียล */
+/* ปุ่มโซเชียล */
 .social-button {
   width: 100%;
-  padding: 10px ;
+  padding: 10px;
   font-size: 16px;
   border: 1px solid #ddd;
   border-radius: 1px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  text-align: left; /* ข้อความเริ่มจากซ้าย */
-  justify-content: flex-start; /* จัดให้อยู่ชิดซ้าย */
+  text-align: left;
+  justify-content: flex-start;
   gap: 15px; /* ระยะห่างระหว่างโลโก้และข้อความ */
-  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto, Droid Sans, Helvetica, Arial, sans-serif;
+  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto,
+    Droid Sans, Helvetica, Arial, sans-serif;
   color: #585858 !important;
   font-weight: bold;
 }
 
-.social-button.google {
-  background-color: white;
-  color: #000000;
-  border: 1px solid ;
-  border-color: #888;
-}
-
-.social-button.facebook {
-  background-color: white;
-  color: #000000;
-  border: 1px solid ;
-  border-color: #888;
-}
-
+.social-button.google,
+.social-button.facebook,
 .social-button.apple {
   background-color: white;
   color: #000000;
-  border: 1px solid ;
-  border-color: #888;
+  border: 1px solid #888;
 }
 
-/* สไตล์สำหรับลิงก์ด้านล่าง */
+.social-button .social-logo {
+  width: 20px;
+  height: 20px;
+}
+
+/* ลิงก์ด้านล่าง */
 .modal-content p {
   font-size: 12px;
   color: #888;
-  text-align: left; /* จัดให้อยู่กลาง */
-  line-height: 1.4; /* เพิ่ม line-height เพื่อเว้นระยะระหว่างบรรทัด */
-  white-space: normal; /* อนุญาตให้ขึ้นบรรทัดใหม่ตามปกติ */
-  word-break: break-word; /* ตัดคำหากยาวเกินขอบ */
+  text-align: left;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
   margin: auto;
-  
 }
 
 .modal-content a {
-  color: #C82021;
+  color: #c82021;
   text-decoration: none;
 }
 
@@ -157,7 +149,61 @@
   text-decoration: underline;
 }
 
-.social-button .social-logo {
-  width: 20px;
-  height: 20px;
+/* ปุ่ม Forgot Password */
+.forgot-password {
+  width: 100%;
+  background-color: transparent;
+  color: #c82021;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: end;
+}
+
+.forgot-password:hover {
+  color: #a8181c;
+}
+
+/* ปุ่ม Back */
+.back-button {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  color: #000000;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 2px;
+}
+
+.back-button:hover {
+  background-color: #f5f5f5;
+}
+
+.white-button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #888;
+  border-radius: 1px;
+  cursor: pointer;
+  align-items: center;
+  text-align: center;
+  gap: 15px;
+  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto,
+    Droid Sans, Helvetica, Arial, sans-serif;
+  color: #585858 !important;
+  font-weight: bold;
+  background-color: white;
+}
+
+label[for="six-digit-code"] {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-align: left;
 }

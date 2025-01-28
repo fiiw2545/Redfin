@@ -1,25 +1,52 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Modal.css";
-import googleIcon from "../../img/google-icon.png";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
 
 const Modal = ({ isOpen, onClose }) => {
+  const [stepHistory, setStepHistory] = useState([1]); // History of modal steps
+  const [email, setEmail] = useState(""); // User email
+  const [userHasPassword, setUserHasPassword] = useState(true); // State to check if user has a password
+
   if (!isOpen) return null;
 
-  // ฟังก์ชันจัดการเมื่อ Google Login สำเร็จ
+  const currentStep = stepHistory[stepHistory.length - 1];
+
+  const changeStep = (newStep) => {
+    setStepHistory([...stepHistory, newStep]);
+  };
+
+  const handleBack = () => {
+    if (stepHistory.length > 1) {
+      setStepHistory(stepHistory.slice(0, -1));
+    }
+  };
+
+  const resetModal = () => {
+    setStepHistory([1]);
+    setEmail("");
+    setUserHasPassword(false);
+  };
+
+  const handleEmailSubmit = () => {
+    if (userHasPassword) {
+      changeStep(4);
+    } else {
+      changeStep(2);
+    }
+  };
+
+  const handleSetPassword = () => changeStep(3);
+  const handleForgotPassword = () => changeStep(5);
+
   const handleSuccess = async (credentialResponse) => {
     try {
-      // ส่ง Token ไปยัง Backend
       const res = await axios.post(
         "http://localhost:5000/api/users/google-login",
-        {
-          token: credentialResponse.credential,
-        }
+        { token: credentialResponse.credential }
       );
 
       if (res.status === 200) {
-        // เก็บข้อมูลใน localStorage
         localStorage.setItem("authToken", res.data.token);
         localStorage.setItem(
           "user",
@@ -30,10 +57,7 @@ const Modal = ({ isOpen, onClose }) => {
           })
         );
 
-        // ปิด Modal
         onClose();
-
-        // Redirect ไปหน้าอื่น (ถ้าจำเป็น)
         window.location.href = "/";
       }
     } catch (error) {
@@ -45,7 +69,6 @@ const Modal = ({ isOpen, onClose }) => {
     }
   };
 
-  // ฟังก์ชันจัดการเมื่อ Google Login ล้มเหลว
   const handleError = () => {
     console.error("Google Sign-In Failed");
     alert("Google Sign-In Failed. Please try again.");
@@ -54,34 +77,160 @@ const Modal = ({ isOpen, onClose }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>
+        <button
+          className="modal-close"
+          onClick={() => {
+            resetModal();
+            onClose();
+          }}
+        >
           ×
         </button>
-        <h2>Join or Sign In</h2>
 
-        {/* ช่องกรอก Email */}
-        <input type="email" placeholder="Email" />
-        <button className="email-button">Continue with Email</button>
+        {currentStep === 1 && (
+          <>
+            <h2>Join or Sign In</h2>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleEmailSubmit();
+                }
+              }}
+            />
+            <button className="email-button" onClick={handleEmailSubmit}>
+              Continue with Email
+            </button>
+            <div className="separator">
+              <span>or</span>
+            </div>
+            <GoogleLogin
+              onSuccess={handleSuccess}
+              onError={handleError}
+              useOneTap
+              text="continue_with"
+              size="large"
+            />
+            <p>
+              By signing in you agree to Redfin's <a href="#">Terms of Use</a>{" "}
+              and <a href="#">Privacy Policy</a>.
+            </p>
+          </>
+        )}
 
-        {/* ตัวแบ่งระหว่างตัวเลือก */}
-        <div className="separator">
-          <span>or</span>
-        </div>
+        {currentStep === 2 && (
+          <>
+            <h2>Sign in</h2>
+            <p>
+              We emailed you a temporary sign-in code. Please check your inbox.
+            </p>
+            <label htmlFor="six-digit-code">6-digit code</label>
+            <input
+              type="text"
+              id="six-digit-code"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleEmailSubmit();
+                }
+              }}
+            />
+            <button className="email-button">Continue</button>
+            {!userHasPassword && (
+              <button className="white-button" onClick={handleSetPassword}>
+                Set a password instead
+              </button>
+            )}
+            <button className="back-button" onClick={handleBack}>
+              Back
+            </button>
+            <p>
+              By signing in you agree to Redfin's <a href="#">Terms of Use</a>{" "}
+              and <a href="#">Privacy Policy</a>.
+            </p>
+          </>
+        )}
 
-        {/* ปุ่มโซเชียล */}
-        <GoogleLogin
-          onSuccess={handleSuccess}
-          onError={handleError}
-          useOneTap // ตัวเลือก One Tap Login
-          text="continue_with"
-          size="large"
-        />
+        {currentStep === 3 && (
+          <>
+            <h2>Welcome back</h2>
+            <p>
+              We will send you an email to set your password and sign into your
+              account.
+            </p>
+            <button className="email-button">Set a password</button>
+            <button className="white-button" onClick={() => changeStep(2)}>
+              Sign in with a temporary code
+            </button>
+            <button className="back-button" onClick={handleBack}>
+              Back
+            </button>
+            <p>
+              By signing in you agree to Redfin's <a href="#">Terms of Use</a>{" "}
+              and <a href="#">Privacy Policy</a>.
+            </p>
+          </>
+        )}
 
-        {/* ลิงก์ยินยอม */}
-        <p>
-          By signing in you agree to Redfin's <a href="#">Terms of Use</a> and{" "}
-          <a href="#">Privacy Policy</a>.
-        </p>
+        {currentStep === 4 && (
+          <>
+            <h2>Sign In</h2>
+            <input type="email" value={email} readOnly placeholder="Email" />
+            <input
+              type="password"
+              placeholder="Password"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleEmailSubmit();
+                }
+              }}
+            />
+            <button className="forgot-password" onClick={handleForgotPassword}>
+              Forgot Password?
+            </button>
+            <button className="email-button">Continue with Email</button>
+            <button className="white-button" onClick={() => changeStep(2)}>
+              Sign in with a temporary code
+            </button>
+            <button className="back-button" onClick={handleBack}>
+              Back
+            </button>
+            <p>
+              By signing in you agree to Redfin's <a href="#">Terms of Use</a>{" "}
+              and <a href="#">Privacy Policy</a>.
+            </p>
+          </>
+        )}
+
+        {currentStep === 5 && (
+          <>
+            <h2>Forgot Password?</h2>
+            <p>
+              We will send you an email to set your password and sign into your
+              account.
+            </p>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleEmailSubmit();
+                }
+              }}
+            />
+            <button className="email-button">Reset Password</button>
+            <button className="white-button" onClick={() => changeStep(2)}>
+              Sign in with a temporary code
+            </button>
+            <button className="back-button" onClick={handleBack}>
+              Back
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

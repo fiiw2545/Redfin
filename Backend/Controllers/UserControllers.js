@@ -128,6 +128,7 @@ const loginUser = async (req, res) => {
       maxAge: 3600 * 1000, // เวลาหมดอายุ 1 ชั่วโมง
       sameSite: "Strict", // ป้องกันการใช้คุกกี้จาก cross-site request
     });
+    console.log("Token sent in cookie:", token);
 
     res.status(200).json({
       message: "Login successful!",
@@ -161,11 +162,17 @@ const logoutUser = (req, res) => {
 const resendEmail = async (req, res) => {
   const { email } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: "Email is required." });
+  // ตรวจสอบว่ามีอีเมลและอยู่ในรูปแบบที่ถูกต้อง
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ message: "A valid email is required." });
   }
 
   try {
+    // ตรวจสอบว่า EMAIL_USER และ EMAIL_PASS ถูกตั้งค่าใน .env
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error("Email credentials are not configured properly.");
+    }
+
     // สร้างตัวส่งอีเมลด้วย nodemailer
     const transporter = nodemailer.createTransport({
       service: "gmail", // ใช้ Gmail เป็นตัวอย่าง
@@ -175,17 +182,18 @@ const resendEmail = async (req, res) => {
       },
     });
 
+    // Step 4: สร้างลิงก์ตั้งรหัสผ่าน
+    const verifyLink = `${process.env.CLIENT_URL}/set-password/${resetToken}`;
+
     // กำหนดเนื้อหาอีเมล
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Email Confirmation",
-      html: `
-        <h3>Confirm Your Email</h3>
-        <p>Click the link below to confirm your email:</p>
-        <a href="${process.env.CLIENT_URL}/confirm-email?email=${email}">Confirm Email</a>
-      `,
-    };
+    await sendEmail(
+      email,
+      "Set Your Password",
+      `<h1>Welcome ${newUser.firstName}!</h1>
+       <p>Click the link below to set your password:</p>
+       <a href="${verifyLink}">Set Password</a>
+       <p>This link will expire in 1 hour.</p>`
+    );
 
     // ส่งอีเมล
     await transporter.sendMail(mailOptions);
@@ -327,14 +335,31 @@ const getEmailFromToken = async (req, res) => {
 //ฟังก์ชันดึงข้อมูล
 const getinformation = async (req, res) => {
   try {
-    console.log("Decoded user from token:", req.user); // Debug
-    const user = await User.findById(req.user.id);
+    // ดึง Token จาก Cookie
+    const token = req.cookies.token;
+
+    if (!token) {
+      console.error("Token is missing!"); // Debug
+      return res.status(401).json({ message: "Token is required" });
+    }
+
+    // ตรวจสอบและถอดรหัส Token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // ใช้ JWT Secret ใน .env
+
+    if (!decoded || !decoded.id) {
+      console.error("Invalid token or missing user ID in token"); // Debug
+      return res.status(403).json({ message: "Invalid token" });
+    }
+
+    // ค้นหาข้อมูลผู้ใช้ในฐานข้อมูลโดยอิงจาก userId
+    const user = await User.findById(decoded.id);
 
     if (!user) {
-      console.error("User not found for ID:", req.user.id); // Debug
+      console.error("User not found for ID:", decoded.id); // Debug
       return res.status(404).json({ message: "User not found" });
     }
 
+    // ส่งข้อมูลผู้ใช้กลับไป
     res.status(200).json({
       firstName: user.firstName,
       lastName: user.lastName,
