@@ -8,6 +8,38 @@ const ChagePasswordPage = () => {
 
   const isMobileView = windowSize.width < 980;
 
+  // ฟังก์ชันสำหรับดึงอีเมลจาก backend
+  useEffect(() => {
+    const fetchEmail = async () => {
+      if (!token) {
+        console.error("Token is missing or undefined.");
+        setEmail("Unknown User");
+        return;
+      }
+
+      console.log("Token:", token);
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/users/email/${token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // ใช้ token เป็น Bearer token
+            },
+          }
+        );
+        setEmail(response.data.email || "Unknown User");
+      } catch (error) {
+        console.error(
+          "Error fetching email:",
+          error.response?.data || error.message
+        );
+        setEmail("Unknown User");
+      }
+    };
+
+    fetchEmail();
+  }, [token]); // useEffect จะทำงานเมื่อ token เปลี่ยนค่า
+
   return (
     <div style={styles.global}>
       <Navbar />

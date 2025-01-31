@@ -22,6 +22,7 @@ import OwnerDashboard from "./pages/ownerDashboard";
 import NotificationSettings from "./pages/notificationSettings";
 import AccountSettings from "./pages/accountSettings";
 import ChagePasswordPage from "./pages/changepassword";
+import VerifyEmail from "./pages/VerifyEmail";
 
 const App = () => {
   return (
@@ -50,6 +51,7 @@ const App = () => {
         />
         <Route path="/account-settings" element={<AccountSettings />} />
         <Route path="/changepassword" element={<ChagePasswordPage />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
       </Routes>
     </Router>
   );

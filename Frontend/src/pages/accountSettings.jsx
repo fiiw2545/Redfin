@@ -39,33 +39,28 @@ const AccountSettings = () => {
   }, [email]);
 
   // ส่งอีเมลยืนยันอีกครั้ง
-  const handleResendEmail = (e) => {
+  const handleResendEmail = async (e) => {
     e.preventDefault(); // ป้องกันการโหลดหน้าใหม่
 
-    if (!userEmail) {
-      console.log(
-        "User email is not set. Current value of userEmail:",
-        userEmail
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/resend-email",
+        {},
+        { withCredentials: true } // ✅ ส่ง cookies ไปด้วย
       );
-      alert("User email is not set. Please try again.");
-      return;
-    }
 
-    axios
-      .post(`http://localhost:5000/api/users/resend-email`, {
-        email: userEmail, // ใส่อีเมลผู้ใช้ที่ต้องการส่ง
-      })
-      .then((response) => {
-        if (response.status === 200) {
-          alert("Email has been resent successfully!");
-        } else {
-          alert("Failed to resend email. Please try again.");
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        alert("An error occurred while resending the email.");
-      });
+      if (response.status === 200) {
+        alert("Verification email has been sent successfully!");
+      } else {
+        alert("Failed to resend email. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert(
+        error.response?.data?.message ||
+          "An error occurred while resending the email."
+      );
+    }
   };
 
   // อัปเดทรูปภาพในฐานข้อมูล

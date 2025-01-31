@@ -156,54 +156,93 @@ const logoutUser = (req, res) => {
   res.status(200).json({ message: "Logout successful!" });
 };
 
-// ฟังก์ชันยืนยันอีเมล
+// ฟังก์ชันส่งอีเมลอีกครั้ง
 const resendEmail = async (req, res) => {
-  const { email } = req.body;
-
-  // ตรวจสอบว่ามีอีเมลและอยู่ในรูปแบบที่ถูกต้อง
-  if (!email || !/\S+@\S+\.\S+/.test(email)) {
-    return res.status(400).json({ message: "A valid email is required." });
-  }
-
   try {
-    // ตรวจสอบว่า EMAIL_USER และ EMAIL_PASS ถูกตั้งค่าใน .env
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error("Email credentials are not configured properly.");
+    // ดึง token จาก Cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
     }
 
-    // สร้างตัวส่งอีเมลด้วย nodemailer
-    const transporter = nodemailer.createTransport({
-      service: "gmail", // ใช้ Gmail เป็นตัวอย่าง
-      auth: {
-        user: process.env.EMAIL_USER, // อีเมลที่ใช้ส่ง (จาก .env)
-        pass: process.env.EMAIL_PASS, // รหัสผ่านแอป (จาก .env)
-      },
+    // ตรวจสอบ token และดึง userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // ค้นหาผู้ใช้จาก userId
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // ตรวจสอบว่าผู้ใช้ยืนยันอีเมลแล้วหรือยัง
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email already verified." });
+    }
+
+    // สร้าง verifyToken ใหม่ (ใช้ JWT)
+    const verifyToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+    user.verifyToken = verifyToken;
+    await user.save();
 
-    // Step 4: สร้างลิงก์ตั้งรหัสผ่าน
-    const verifyLink = `${process.env.CLIENT_URL}/set-password/${resetToken}`;
+    // สร้างลิงก์ยืนยันอีเมล
+    const verifyLink = `${process.env.CLIENT_URL}/verify-email/${verifyToken}`;
 
-    // กำหนดเนื้อหาอีเมล
+    // ใช้ `sendEmail` ที่เราสร้างไว้
     await sendEmail(
-      email,
-      "Set Your Password",
-      `<h1>Welcome ${newUser.firstName}!</h1>
-       <p>Click the link below to set your password:</p>
-       <a href="${verifyLink}">Set Password</a>
-       <p>This link will expire in 1 hour.</p>`
+      user.email,
+      "Verify Your Email",
+      `
+        <h1>Email Verification</h1>
+        <p>Click the link below to verify your email:</p>
+        <a href="${verifyLink}" target="_blank">Verify Email</a>
+        <p>This link will expire in 1 hour.</p>
+      `
     );
-
-    // ส่งอีเมล
-    await transporter.sendMail(mailOptions);
 
     return res
       .status(200)
-      .json({ message: "Email has been resent successfully." });
+      .json({ message: "Verification email sent successfully." });
   } catch (error) {
     console.error("Error sending email:", error);
     return res
       .status(500)
       .json({ message: "An error occurred while sending the email." });
+  }
+};
+
+//ฟังก์ชันยืนยันอีเมล
+const verifyEmail = async (req, res) => {
+  try {
+    // ดึง token จาก Cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ตรวจสอบ token และดึง userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // ค้นหาผู้ใช้จาก userId
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // อัปเดตค่า isVerified เป็น true
+    user.isVerified = true;
+    user.verifyToken = null; // ลบโทเค็นออกจากฐานข้อมูล
+    await user.save();
+
+    return res.status(200).json({ message: "Email verified successfully." });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while verifying the email." });
   }
 };
 
@@ -521,6 +560,7 @@ module.exports = {
   logoutUser,
   resendEmail,
   setPassword,
+  verifyEmail,
   googleLogin,
   forgotPassword,
   getEmailFromToken,
