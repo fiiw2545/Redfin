@@ -8,6 +8,7 @@ import { useGlobalEvent } from "../../context/GlobalEventContext";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Navbar = () => {
   const { windowSize } = useGlobalEvent();
@@ -20,13 +21,27 @@ const Navbar = () => {
 
   // อ่านข้อมูลผู้ใช้จาก localStorage
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (userData) {
-      setUser(userData);
-      setIsLoggedIn(true); // ตั้งสถานะล็อกอิน
-    } else {
-      setIsLoggedIn(false); // ถ้าไม่มีข้อมูลผู้ใช้
-    }
+    const fetchUserData = async () => {
+      try {
+        // เรียก API เพื่อดึงข้อมูลผู้ใช้
+        const response = await axios.get("/api/user", {
+          withCredentials: true, // เปิดใช้งานการส่ง cookies
+        });
+        const userData = response.data;
+
+        if (userData) {
+          setUser(userData);
+          setIsLoggedIn(true); // อัปเดตสถานะล็อกอิน
+        } else {
+          setIsLoggedIn(false); // ถ้าไม่มีข้อมูลผู้ใช้
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setIsLoggedIn(false); // กรณีเกิดข้อผิดพลาด
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   // ฟังก์ชันออกจากระบบ

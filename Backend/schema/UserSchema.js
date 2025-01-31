@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false, // เพิ่มค่าเริ่มต้นเป็นยังไม่ยืนยัน
     },
+    profileImage: {
+      type: String,
+      default: "https://example.com/default-profile.png", // URL ของภาพโปรไฟล์เริ่มต้น
+    },
     googleId: {
       type: String, // ใช้เก็บ Google ID ในกรณีที่ผู้ใช้สมัครผ่าน Google
     },
@@ -31,9 +35,6 @@ const userSchema = new mongoose.Schema(
     },
     appleId: {
       type: String, // ใช้เก็บ Apple ID ในกรณีที่ผู้ใช้สมัครผ่าน Apple
-    },
-    profileImage: {
-      type: String, // URL รูปโปรไฟล์ของผู้ใช้
     },
     createdAt: {
       type: Date,

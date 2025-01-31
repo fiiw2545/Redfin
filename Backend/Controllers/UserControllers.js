@@ -8,7 +8,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ฟังก์ชันสมัครสมาชิกพร้อมยืนยันอีเมล
 const registerUser = async (req, res) => {
-  const { firstName, lastName, email } = req.body;
+  const { firstName, lastName, email, profileImage } = req.body;
 
   try {
     // Step 1: ตรวจสอบว่าอีเมลมีในระบบอยู่แล้วหรือไม่
@@ -22,6 +22,7 @@ const registerUser = async (req, res) => {
       firstName,
       lastName,
       email,
+      profileImage: profileImage || undefined, // ใช้ค่าเริ่มต้นหากไม่มี profileImage
       isVerified: false,
     });
     await newUser.save();
@@ -36,6 +37,9 @@ const registerUser = async (req, res) => {
     await newUser.save();
 
     // Step 4: สร้างลิงก์ตั้งรหัสผ่าน
+    if (!process.env.CLIENT_URL) {
+      throw new Error("CLIENT_URL is not defined in environment variables.");
+    }
     const resetLink = `${process.env.CLIENT_URL}/set-password/${resetToken}`;
 
     // Step 5: ส่งลิงก์ยืนยันอีเมล
@@ -104,12 +108,6 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password!" });
-    }
-
-    if (!user.isVerified) {
-      return res
-        .status(401)
-        .json({ message: "Please verify your email before logging in!" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -332,7 +330,7 @@ const getEmailFromToken = async (req, res) => {
   }
 };
 
-//ฟังก์ชันดึงข้อมูล
+//ฟังก์ชันดึงข้อมูลแสดง
 const getinformation = async (req, res) => {
   try {
     // ดึง Token จาก Cookie
@@ -371,6 +369,151 @@ const getinformation = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+  try {
+    // ดึงโทเค็นจากคุกกี้
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ตรวจสอบโทเค็น
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password"); // ดึงข้อมูลผู้ใช้จากฐานข้อมูล
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user); // ส่งข้อมูลผู้ใช้กลับไป
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ฟังก์ชันในการอัปเดตรูปภาพ
+const updateProfilePicture = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Missing profileImage" });
+    }
+
+    const profileImage = req.file.buffer.toString("base64");
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { profileImage },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("Updated User Data:", user); // ✅ เพิ่ม Log
+
+    return res.status(200).json({
+      message: "Profile picture updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+//ลบรูปภาพ
+const removeProfilePicture = async (req, res) => {
+  try {
+    // ✅ ตรวจสอบว่า token มีใน cookies หรือไม่
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ✅ ตรวจสอบ token และดึง userId จาก token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ✅ อัปเดตฐานข้อมูล (ลบรูปภาพ)
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profileImage: null }, // ✅ ตั้งค่า profileImage เป็น `null`
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile picture removed successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error removing profile picture:", error);
+    res.status(500).json({ message: "Error removing profile picture" });
+  }
+};
+
+//อัพเดทข้อมูลของผู้ใช้
+const updateProfile = async (req, res) => {
+  try {
+    // ✅ ตรวจสอบ token จาก cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ✅ ถอดรหัส token เพื่อดึง userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ✅ ดึงข้อมูลจาก body ของ request
+    const { firstName, lastName, email } = req.body;
+
+    // ✅ ตรวจสอบว่ามีข้อมูลอะไรที่ต้องอัปเดตบ้าง
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+
+    // ✅ อัปเดตข้อมูลผู้ใช้ในฐานข้อมูล
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser, // ✅ ส่งข้อมูลที่อัปเดตแล้วกลับไป
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Error updating profile" });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
@@ -382,4 +525,8 @@ module.exports = {
   forgotPassword,
   getEmailFromToken,
   getinformation,
+  getUser,
+  updateProfilePicture,
+  removeProfilePicture,
+  updateProfile,
 };

@@ -21,6 +21,7 @@ import Reviews from "./pages/reviews";
 import OwnerDashboard from "./pages/ownerDashboard";
 import NotificationSettings from "./pages/notificationSettings";
 import AccountSettings from "./pages/accountSettings";
+import ChagePasswordPage from "./pages/changepassword";
 
 const App = () => {
   return (
@@ -48,6 +49,7 @@ const App = () => {
           element={<NotificationSettings />}
         />
         <Route path="/account-settings" element={<AccountSettings />} />
+        <Route path="/changepassword" element={<ChagePasswordPage />} />
       </Routes>
     </Router>
   );

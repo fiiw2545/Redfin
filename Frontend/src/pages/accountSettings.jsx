@@ -5,15 +5,20 @@ import googleIcon from "../img/google-icon.png";
 import Footer from "../components/Footer/Footer";
 import { GoogleLogin } from "@react-oauth/google";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
 import Cookies from "js-cookie";
 
 const AccountSettings = () => {
   const [userEmail, setUserEmail] = useState(""); // ตัวแปรสำหรับเก็บอีเมลผู้ใช้
   const [selectedValue, setSelectedValue] = useState("");
+  const [previewImage, setPreviewImage] = useState(null);
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(null); // ตัวแปรสำหรับเก็บข้อมูลผู้ใช้
   const [showGoogleLogin, setShowGoogleLogin] = useState(false); //เพื่อควบคุมการแสดงปุ่ม GoogleLogin
+
   //`http://localhost:5000/api/users/information/${email}`
   // ฟังก์ชันดึงข้อมูลผู้ใช้
   useEffect(() => {
@@ -31,7 +36,7 @@ const AccountSettings = () => {
     };
 
     fetchUserData();
-  }, []);
+  }, [email]);
 
   // ส่งอีเมลยืนยันอีกครั้ง
   const handleResendEmail = (e) => {
@@ -63,23 +68,33 @@ const AccountSettings = () => {
       });
   };
 
-  //อัพเดทรูปภาพ
-  const handleUpdateProfilePicture = async (imageData) => {
+  // อัปเดทรูปภาพในฐานข้อมูล
+  const handleUpdateProfilePicture = async (imageFile) => {
     try {
+      const formData = new FormData();
+      formData.append("profileImage", imageFile);
+
       const response = await axios.post(
         "http://localhost:5000/api/users/update-profile-picture",
+        formData,
         {
-          userId: userData.id, // หรือค่า ID ของผู้ใช้
-          profilePicture: imageData,
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
         }
       );
 
-      if (response.status === 200) {
-        alert("Profile picture updated successfully!");
-        setUserData((prevData) => ({
-          ...prevData,
-          profilePicture: imageData,
+      console.log("API Response:", response.data);
+
+      if (response.status === 200 && response.data.user) {
+        setUserData((prev) => ({
+          ...prev,
+          profileImage: `data:image/jpeg;base64,${response.data.user.profileImage}`,
         }));
+
+        // ✅ ล้าง Preview หลังจากอัปโหลดสำเร็จ
+        setPreviewImage(null);
+
+        alert("Profile picture updated successfully!");
       } else {
         alert("Failed to update profile picture.");
       }
@@ -92,33 +107,41 @@ const AccountSettings = () => {
   // เปลี่ยนรูปภาพ
   const handleChangePhoto = (e) => {
     const file = e.target.files[0];
+
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // แสดงรูปภาพที่เลือก
-        const imgElement = document.getElementById("profileImage");
-        imgElement.src = reader.result; // แสดงรูปใหม่
-        handleUpdateProfilePicture(reader.result); //อัพเดทรูปในฐานข้อมูล
-      };
-      reader.readAsDataURL(file); // แปลงไฟล์เป็น Data URL เพื่อแสดงใน HTML
+      if (file.size > 2 * 1024 * 1024) {
+        alert("File size should not exceed 2MB");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        alert("Please upload a valid image file");
+        return;
+      }
+
+      // ✅ สร้าง Preview Image
+      const previewURL = URL.createObjectURL(file);
+      setPreviewImage(previewURL);
+
+      handleUpdateProfilePicture(file);
     }
   };
 
   // ลบรูปภาพ
   const handleRemovePhoto = async () => {
-    const defaultImage = "https://your-default-image-url.com";
     try {
-      const response = await axios.post(
+      const response = await axios.put(
         "http://localhost:5000/api/users/update-profile-picture",
-        {
-          userId: userData.id, // หรือค่า ID ของผู้ใช้
-          profilePicture: defaultImage,
-        }
+        { profileImage: null }, // ✅ ส่งค่า null เพื่อให้ Backend ลบรูป
+        { withCredentials: true }
       );
 
-      if (response.status === 200) {
-        const imgElement = document.getElementById("profileImage");
-        imgElement.src = defaultImage; // แสดงรูปเริ่มต้นในหน้าจอ
+      console.log("Remove Photo Response:", response.data);
+
+      if (response.status === 200 && response.data.user) {
+        setUserData((prev) => ({
+          ...prev,
+          profileImage: null, // ✅ ตั้งค่า null ให้ state
+        }));
         alert("Profile picture removed successfully!");
       } else {
         alert("Failed to remove profile picture.");
@@ -131,7 +154,7 @@ const AccountSettings = () => {
 
   //อัพเดทข้อมูล
   const handleSaveUpdates = async (e) => {
-    e.preventDefault(); // ป้องกันการโหลดหน้าใหม่
+    e.preventDefault();
 
     const updatedData = {
       firstName: document.getElementById("firstNameInput").value,
@@ -141,11 +164,15 @@ const AccountSettings = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/users/update`, // URL ของ API
-        updatedData // ส่งข้อมูลที่แก้ไข
+        "http://localhost:5000/api/users/update-profile", // ✅ ตรวจสอบว่า Backend รองรับ endpoint นี้
+        updatedData,
+        { withCredentials: true }
       );
 
-      if (response.status === 200) {
+      console.log("Profile Update Response:", response.data);
+
+      if (response.status === 200 && response.data.user) {
+        setUserData((prev) => ({ ...prev, ...response.data.user }));
         alert("Profile updated successfully!");
       } else {
         alert("Failed to update profile. Please try again.");
@@ -259,11 +286,17 @@ const AccountSettings = () => {
               <img
                 id="profileImage"
                 src={
-                  userData?.profilePicture ||
-                  "https://your-default-image-url.com"
+                  previewImage || // ✅ แสดงรูปที่เลือกไว้ก่อนอัปโหลด
+                  (userData?.profileImage
+                    ? `data:image/jpeg;base64,${userData.profileImage}`
+                    : "/png-clipart-computer-icons-user-user-heroes-black.png")
                 }
                 alt="Profile"
                 style={styles.avatar}
+                onError={(e) => {
+                  e.target.src =
+                    "/png-clipart-computer-icons-user-user-heroes-black.png";
+                }}
               />
             </div>
 
@@ -354,11 +387,13 @@ const AccountSettings = () => {
                 </div>
               </div>
 
-              <div style={styles.formGroup}>
-                <button type="button" style={styles.passwordButton}>
-                  Change Password
-                </button>
-              </div>
+              <button
+                type="button"
+                style={styles.passwordButton}
+                onClick={() => navigate("/changepassword")}
+              >
+                Change Password
+              </button>
 
               <div style={styles.formGroup}>
                 <button
