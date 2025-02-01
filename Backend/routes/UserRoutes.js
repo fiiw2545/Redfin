@@ -30,7 +30,7 @@ router.post("/login", loginUser); // Route สำหรับ Login
 router.post("/logout", logoutUser); // Route สำหรับ Login
 router.get("/information", authenticateToken, getinformation);
 router.post("/resend-email", resendEmail); // เส้นทางส่งอีเมลยืนยัน
-router.get("/verify-email", verifyEmail); //เส้นทางยืนยันอีเมล
+router.post("/verify-email", verifyEmail); //เส้นทางยืนยันอีเมล
 router.post("/reset-password/:token", setPassword); // เส้นทางสร้างรหัสผ่าน
 router.post("/google-login", googleLogin); //เส้นทางสำหรับล็อคอินด้วยGoogle
 router.post("/forgot-password", forgotPassword); // เส้นทางรีเซ็ตรหัสผ่าน
