@@ -1,32 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Cookies from "js-cookie"; // ใช้ดึง token จาก cookies
 import { useGlobalEvent } from "../context/GlobalEventContext";
-
 import Navbar from "../components/Navbar/Navbar";
 
-const ChagePasswordPage = () => {
+const ChangePasswordPage = () => {
   const { windowSize } = useGlobalEvent();
-
   const isMobileView = windowSize.width < 980;
+  // State สำหรับข้อมูลฟอร์ม
+  const [email, setEmail] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
 
-  // ฟังก์ชันสำหรับดึงอีเมลจาก backend
+  // ✅ ฟังก์ชันสำหรับดึงอีเมลจาก backend
   useEffect(() => {
     const fetchEmail = async () => {
-      if (!token) {
-        console.error("Token is missing or undefined.");
-        setEmail("Unknown User");
-        return;
-      }
-
-      console.log("Token:", token);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/users/email/${token}`,
+          "http://localhost:5000/api/users/email",
           {
-            headers: {
-              Authorization: `Bearer ${token}`, // ใช้ token เป็น Bearer token
-            },
+            withCredentials: true, // ✅ ให้ Axios ส่ง Cookies ไปด้วย
           }
         );
+
         setEmail(response.data.email || "Unknown User");
       } catch (error) {
         console.error(
@@ -38,7 +36,25 @@ const ChagePasswordPage = () => {
     };
 
     fetchEmail();
-  }, [token]); // useEffect จะทำงานเมื่อ token เปลี่ยนค่า
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/users/change-password",
+        { oldPassword, newPassword, confirmPassword },
+        { withCredentials: true }
+      );
+
+      setMessage(response.data.message);
+      setTimeout(() => navigate("/account"), 2000); // ✅ เปลี่ยนหน้าหลังจากเปลี่ยนรหัสผ่านสำเร็จ
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Something went wrong");
+    }
+  };
 
   return (
     <div style={styles.global}>
@@ -52,10 +68,8 @@ const ChagePasswordPage = () => {
         >
           <h1 style={styles.title}>Change Your Password</h1>
           <p style={styles.subtitle}>
-            Update the password for:
-            <br />
-            {/* <strong>{mail || 'Loading...'}</strong> */}
-            <strong>mail</strong>
+            Update the password for: <br />
+            <strong>{email || "Loading..."}</strong>
           </p>
 
           <div style={styles.requirements}>
@@ -67,34 +81,43 @@ const ChagePasswordPage = () => {
               <li>At least 1 symbol (!#$&*?, etc.)</li>
             </ul>
           </div>
-          <form style={styles.form}>
+
+          <form onSubmit={handleSubmit} style={styles.form}>
+            {message && <p style={{ color: "red" }}>{message}</p>}
+
             <label htmlFor="old-password" style={styles.label}>
               Old Password:
             </label>
             <input
               id="old-password"
               type="password"
-              // value={oldPassword}
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
               style={styles.input}
             />
+
             <label htmlFor="new-password" style={styles.label}>
               New Password:
             </label>
             <input
               id="new-password"
               type="password"
-              // value={newPassword}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               style={styles.input}
             />
+
             <label htmlFor="re-enter-new-password" style={styles.label}>
               Re-enter New Password:
             </label>
             <input
               id="re-enter-new-password"
               type="password"
-              // value={newPassword}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               style={styles.input}
             />
+
             <button type="submit" style={styles.submitButton}>
               Change Password
             </button>
@@ -189,4 +212,4 @@ const styles = {
   },
 };
 
-export default ChagePasswordPage;
+export default ChangePasswordPage;

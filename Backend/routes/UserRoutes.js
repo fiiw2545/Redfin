@@ -11,10 +11,12 @@ const {
   logoutUser,
   resendEmail,
   setPassword,
+  changePassword,
   verifyEmail,
   googleLogin,
   forgotPassword,
   getEmailFromToken,
+  getEmailFromCookie,
   getinformation,
   getUser,
   updateProfilePicture,
@@ -27,14 +29,16 @@ const router = express.Router();
 
 router.post("/register", registerUser); // Route สำหรับ Register
 router.post("/login", loginUser); // Route สำหรับ Login
-router.post("/logout", logoutUser); // Route สำหรับ Login
-router.get("/information", authenticateToken, getinformation);
+router.post("/logout", logoutUser); // Route สำหรับ Logout
+router.get("/information", authenticateToken, getinformation); //ดึงข้อมูลผู้ใช้
 router.post("/resend-email", resendEmail); // เส้นทางส่งอีเมลยืนยัน
 router.post("/verify-email", verifyEmail); //เส้นทางยืนยันอีเมล
 router.post("/reset-password/:token", setPassword); // เส้นทางสร้างรหัสผ่าน
+router.post("/change-password", changePassword); // เส้นทางเปลี่ยนรหัสผ่าน
 router.post("/google-login", googleLogin); //เส้นทางสำหรับล็อคอินด้วยGoogle
 router.post("/forgot-password", forgotPassword); // เส้นทางรีเซ็ตรหัสผ่าน
 router.get("/email/:token", getEmailFromToken); // เส้นทางดึงอีเมล
+router.get("/email", getEmailFromCookie); // เส้นทางดึงอีเมล
 router.post(
   "/update-profile-picture",
   upload.single("profileImage"), // ใช้มิดเดิลแวร์นี้เพื่อจัดการกับการอัปโหลดไฟล์

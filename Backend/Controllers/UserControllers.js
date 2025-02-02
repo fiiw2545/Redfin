@@ -369,6 +369,25 @@ const getEmailFromToken = async (req, res) => {
   }
 };
 
+//ฟังก์ชันดึงอีเมลจากTokenใหม่
+const getEmailFromCookie = async (req, res) => {
+  try {
+    const token = req.cookies.token; // ✅ ดึง Token จาก Cookies (ไม่ต้องใช้ `req.params`)
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json({ email: user.email });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 //ฟังก์ชันดึงข้อมูลแสดง
 const getinformation = async (req, res) => {
   try {
@@ -553,6 +572,60 @@ const updateProfile = async (req, res) => {
   }
 };
 
+//เปลี่ยนรหัสผ่านโดยมีรหัสผ่านเก่าให้ยืนยัน
+const changePassword = async (req, res) => {
+  try {
+    // ✅ ตรวจสอบ token จาก cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ✅ ถอดรหัส token เพื่อดึง userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ✅ รับค่าจาก body
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // ✅ ตรวจสอบว่ามีค่า newPassword กับ confirmPassword
+    if (!newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Please provide all fields" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // ✅ ค้นหาผู้ใช้จากฐานข้อมูล
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ ตรวจสอบรหัสผ่านเก่า
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    // ✅ เข้ารหัสรหัสผ่านใหม่
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
@@ -560,10 +633,12 @@ module.exports = {
   logoutUser,
   resendEmail,
   setPassword,
+  changePassword,
   verifyEmail,
   googleLogin,
   forgotPassword,
   getEmailFromToken,
+  getEmailFromCookie,
   getinformation,
   getUser,
   updateProfilePicture,
