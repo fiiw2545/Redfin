@@ -135,6 +135,7 @@ const loginUser = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        profileImage: user.profileImage,
       },
     });
     return;
@@ -420,6 +421,7 @@ const getinformation = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      profileImage: user.profileImage,
     });
   } catch (error) {
     console.error("Error in getInformation:", error); // Debug

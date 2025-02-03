@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema(
     appleId: {
       type: String, // ใช้เก็บ Apple ID ในกรณีที่ผู้ใช้สมัครผ่าน Apple
     },
+    phoneNumber: {
+      type: String,
+      required: false, // สามารถกำหนดว่าไม่จำเป็นต้องกรอกเบอร์โทรศัพท์
+      unique: true, // ถ้าต้องการให้เบอร์โทรศัพท์ไม่ซ้ำกัน
+    },
     createdAt: {
       type: Date,
       default: Date.now, // เวลาที่ผู้ใช้สมัครสมาชิก

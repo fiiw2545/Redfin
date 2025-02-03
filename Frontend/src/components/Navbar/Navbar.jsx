@@ -16,41 +16,55 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-
   const navigate = useNavigate();
 
-  // อ่านข้อมูลผู้ใช้จาก localStorage
+  // อ่านข้อมูลผู้ใช้จาก cookies เมื่อผู้ใช้ล็อกอิน
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // เรียก API เพื่อดึงข้อมูลผู้ใช้
-        const response = await axios.get("/api/user", {
-          withCredentials: true, // เปิดใช้งานการส่ง cookies
-        });
-        const userData = response.data;
-
-        if (userData) {
-          setUser(userData);
-          setIsLoggedIn(true); // อัปเดตสถานะล็อกอิน
+        const response = await axios.get(
+          "http://localhost:5000/api/users/email",
+          {
+            withCredentials: true, // ✅ ให้ Axios ส่ง Cookies ไปด้วย
+          }
+        );
+        if (response.data) {
+          setUser(response.data); // บันทึกข้อมูลผู้ใช้ในสถานะ
+          setIsLoggedIn(true); // ตั้งสถานะให้บ่งบอกว่าผู้ใช้ล็อกอินแล้ว
         } else {
           setIsLoggedIn(false); // ถ้าไม่มีข้อมูลผู้ใช้
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error(
+          "Error fetching user data:",
+          error.response?.data || error.message
+        );
         setIsLoggedIn(false); // กรณีเกิดข้อผิดพลาด
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [isLoggedIn]);
 
   // ฟังก์ชันออกจากระบบ
-  const handleSignOut = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    setUser(null);
-    setIsLoggedIn(false); // อัปเดตสถานะล็อกอิน
-    navigate("/login");
+  const handleSignOut = async () => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/users/logout",
+        {},
+        { withCredentials: true }
+      );
+
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+
+      setUser(null);
+      setIsLoggedIn(false);
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const openModal = () => {
@@ -194,12 +208,18 @@ const Navbar = () => {
             </nav>
             <div className="navbar__actions">
               {!isLoginOrSetPasswordPage &&
-                (isLoggedIn ? (
+                (user ? (
                   <div className="user-dropdown">
-                    <span className="user-name">{user.name}</span>
+                    <span className="user-name">
+                      {user.firstName} {user.lastName}
+                    </span>
                     <img
-                      src={user.profileImage}
-                      alt={user.name}
+                      src={
+                        user?.profileImage
+                          ? `data:image/jpeg;base64,${user.profileImage}`
+                          : "path_to_default_image.jpg"
+                      }
+                      alt={user?.firstName}
                       className="user-avatar"
                     />
                     <div className="dropdown-content">
