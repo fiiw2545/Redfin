@@ -746,22 +746,18 @@ const verifyOTP = async (req, res) => {
     user.otpExpires = null;
     await user.save();
 
-    // สร้าง JWT Token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d", // หมดอายุใน 7 วัน
-      }
-    );
-
-    // ส่ง Token ไปเก็บใน HTTP-Only Cookie
-    res.cookie("authToken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // ใช้ secure=true เมื่ออยู่บน HTTPS
-      sameSite: "Strict", // ป้องกัน CSRF
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
     });
+
+    // เก็บ token ไว้ใน cookies
+    res.cookie("token", token, {
+      httpOnly: true, // ป้องกันการเข้าถึงจาก JavaScript
+      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ใน production
+      maxAge: 3600 * 1000, // เวลาหมดอายุ 1 ชั่วโมง
+      sameSite: "Strict", // ป้องกันการใช้คุกกี้จาก cross-site request
+    });
+    console.log("Token sent in cookie:", token);
 
     res.json({ message: "OTP verified! Login successful." });
   } catch (error) {

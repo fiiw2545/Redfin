@@ -123,11 +123,12 @@ const Modal = ({ isOpen, onClose }) => {
         {
           email,
           password,
-        }
+        },
+        { withCredentials: true }
       );
 
       alert("Login successful!");
-      localStorage.setItem("authToken", res.data.token); // เก็บ token ที่ได้จาก server
+
       window.location.href = "/"; // รีเฟรชหน้าเพื่อเข้าสู่ระบบ
     } catch (error) {
       console.error("Error logging in:", error);
