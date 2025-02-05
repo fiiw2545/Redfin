@@ -33,15 +33,15 @@ const { authenticateToken } = require("../middleware/UserMiddleware");
 const router = express.Router();
 
 router.post("/register", registerUser); // Route สำหรับ Register
-router.post("/register2", register2User); // Route สำหรับ Register
+router.post("/register2", register2User); // Route สำหรับ Register ในหน้าredfin
 router.post("/login", loginUser); // Route สำหรับ Login
 router.post("/logout", logoutUser); // Route สำหรับ Logout
 router.get("/information", authenticateToken, getinformation); //ดึงข้อมูลผู้ใช้
 router.post("/resend-email", resendEmail); // เส้นทางส่งอีเมลยืนยัน
-router.post("/sendOTP", sendOTP); //เส้นทางยืนยันอีเมล
-router.post("/verifyOTP", verifyOTP); //เส้นทางยืนยันอีเมล
+router.post("/sendOTP", sendOTP); //เส้นทางส่งOTP
+router.post("/verifyOTP", verifyOTP); //เส้นทางยืนยันOTPเพื่อเข้าสู่เว็บไซต์
 router.post("/verify-email", verifyEmail); //เส้นทางยืนยันอีเมล
-router.post("/passwordLogin", passwordLogin); //เส้นทางยืนยันอีเมล
+router.post("/passwordLogin", passwordLogin); //เส้นทางเข้าหน้าเว็บRedfinด้วยเมลและรหัสผ่าน
 router.post("/reset-password/:token", setPassword); // เส้นทางสร้างรหัสผ่าน
 router.post("/change-password", changePassword); // เส้นทางเปลี่ยนรหัสผ่าน
 router.post("/google-login", googleLogin); //เส้นทางสำหรับล็อคอินด้วยGoogle

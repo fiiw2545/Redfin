@@ -135,6 +135,34 @@ const Modal = ({ isOpen, onClose }) => {
     }
   };
 
+  //ลืมรหัสผ่าน
+  const resetPassword = async () => {
+    try {
+      if (!email) {
+        alert("Please enter your email address.");
+        return;
+      }
+
+      const response = await axios.post(
+        "http://localhost:5000/api/users/forgot-password",
+        { email }
+      );
+
+      if (response.status === 200) {
+        alert("A password reset email has been sent!");
+      } else {
+        alert(response.data.message || "Failed to send reset email.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      if (error.response && error.response.data) {
+        alert(error.response.data.message || "Failed to send reset email.");
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    }
+  };
+
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
@@ -338,11 +366,13 @@ const Modal = ({ isOpen, onClose }) => {
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleEmailSubmit();
+                  resetPassword();
                 }
               }}
             />
-            <button className="email-button">Reset Password</button>
+            <button className="email-button" onClick={resetPassword}>
+              Reset Password
+            </button>
             <button className="white-button" onClick={() => changeStep(2)}>
               Sign in with a temporary code
             </button>
