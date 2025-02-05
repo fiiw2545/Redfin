@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import NavbarUser from "../components/NavbarUser/NavbarUser";
 import googleIcon from "../img/google-icon.png";
 import Footer from "../components/Footer/Footer";
-import { GoogleLogin } from "@react-oauth/google";
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import facebookIcon from "../img/facebook-icon.png";
+import { Link } from "react-router-dom";
+import { useGlobalEvent } from "../context/GlobalEventContext";
 
 import Cookies from "js-cookie";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 
 const AccountSettings = () => {
   const [userEmail, setUserEmail] = useState(""); // ตัวแปรสำหรับเก็บอีเมลผู้ใช้
@@ -18,8 +20,57 @@ const AccountSettings = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null); // ตัวแปรสำหรับเก็บข้อมูลผู้ใช้
   const [showGoogleLogin, setShowGoogleLogin] = useState(false); //เพื่อควบคุมการแสดงปุ่ม GoogleLogin
+  const { windowSize } = useGlobalEvent();
+  const isMobileView = windowSize.width < 980;
+  const [searchPartnerModalOpen, setsearchPartnerModalOpen] = useState(false);
+  const [isFacebookLinked, setIsFacebookLinked] = useState(false);
+  const [isGoogleLinked, setIsGoogleLinked] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isPreApproved, setIsPreApproved] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [deleteAccountModalOpen, setdeleteAccountModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  //`http://localhost:5000/api/users/information/${email}`
+  const handleChange = () => {
+    setChecked(!checked);
+  };
+
+  const toggleTooltip = () => {
+    setShowTooltip((prev) => !prev);
+  };
+
+  ///รับค่าจากฟอร์มพาร์ทเนอร์
+  const [partnerEmails, setPartnerEmails] = useState({ email: "" });
+  const handleAddPartner = () => {
+    if (partnerEmails.email.trim() === "") {
+      alert("กรุณากรอกอีเมลของพาร์ทเนอร์");
+      return;
+    }
+    alert(`เพิ่มพาร์ทเนอร์: ${partnerEmails.email}`);
+    setPartnerEmails({ email: "" }); // เคลียร์ input
+    setsearchPartnerModalOpen(false); // ปิด modal
+  };
+
+  // ฟังก์ชันเมื่อกดปุ่ม "Delete"
+  const handleDelete = async () => {
+    try {
+      setIsLoading(true); // ตั้งสถานะการโหลดเมื่อกำลังลบ
+      setError(null); // ลบข้อผิดพลาดเก่า (ถ้ามี)
+
+      // เรียก API หรือการลบข้อมูลในระบบของคุณที่นี่
+      // await deleteAccountAPI();
+
+      // ปิด modal หลังการลบสำเร็จ
+      setdeleteAccountModalOpen(false);
+    } catch (error) {
+      // หากเกิดข้อผิดพลาดระหว่างการลบ
+      setError("Error occurred while deleting the account. Please try again.");
+    } finally {
+      setIsLoading(false); // หยุดสถานะการโหลด
+    }
+  };
+
   // ฟังก์ชันดึงข้อมูลผู้ใช้
   useEffect(() => {
     const fetchUserData = async () => {
@@ -227,56 +278,75 @@ const AccountSettings = () => {
     <>
       <Navbar />
       <NavbarUser />
-      <div style={styles.wrapper}>
+      <div
+        style={{
+          ...styles.wrapper,
+          margin: isMobileView ? "0 16px" : "0 140px",
+        }}
+      >
+        {/* หัวข้อหลัก */}
         <div style={styles.title}>Account Settings</div>
 
-        <div style={styles.alert}>
-          <div style={styles.alertIcon}>
-            <svg
-              className="SvgIcon alert-alt"
-              viewBox="0 0 24 24"
-              style={{ width: "24px", height: "24px" }}
-            >
-              <path
-                d="M.205 23.638L11.801.447a.25.25 0 01.447 0l11.596 23.191a.25.25 0 01-.224.362H.429a.25.25 0 01-.224-.362zM12.75 16a.25.25 0 00.25-.25v-5.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v5.5c0 .138.112.25.25.25h1.5zm0 4a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v1.5c0 .138.112.25.25.25h1.5z"
-                fillRule="evenodd"
-                fill="#f5b800"
-              />
-            </svg>
-          </div>
-          <div style={styles.alertContent}>
-            <strong>Verify Your Email</strong>
-            <div style={styles.alertTextWithLinks}>
-              <span style={styles.alertText}>
-                Local MLS rules require you to verify your email address before
-                you can see all home details.
-              </span>
-              <span style={styles.alertLinks}>
-                <a
-                  href="https://mail.google.com"
-                  target="_blank"
-                  style={styles.alertLink}
-                >
-                  Go to Email
-                </a>
-
-                <span> • </span>
-                <a
-                  href="#resend"
-                  style={styles.alertLink}
-                  onClick={handleResendEmail}
-                >
-                  Resend Email
-                </a>
-              </span>
+        {/* ส่วนกล่องเตือนเมื่อ */}
+        {!isVerified && (
+          <div style={styles.alert}>
+            <div style={styles.alertIcon}>
+              <svg
+                className="SvgIcon alert-alt"
+                viewBox="0 0 24 24"
+                style={{ width: "24px", height: "24px" }}
+              >
+                <path
+                  d="M.205 23.638L11.801.447a.25.25 0 01.447 0l11.596 23.191a.25.25 0 01-.224.362H.429a.25.25 0 01-.224-.362zM12.75 16a.25.25 0 00.25-.25v-5.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v5.5c0 .138.112.25.25.25h1.5zm0 4a.25.25 0 00.25-.25v-1.5a.25.25 0 00-.25-.25h-1.5a.25.25 0 00-.25.25v1.5c0 .138.112.25.25.25h1.5z"
+                  fillRule="evenodd"
+                  fill="#f5b800"
+                />
+              </svg>
+            </div>
+            <div style={styles.alertContent}>
+              <strong>Verify Your Email</strong>
+              <div
+                style={{
+                  ...styles.alertTextWithLinks,
+                  flexDirection: isMobileView ? "column" : "row",
+                }}
+              >
+                <span style={styles.alertText}>
+                  Local MLS rules require you to verify your email address
+                  before you can see all home details.
+                </span>
+                <span style={styles.alertLinks}>
+                  <a
+                    href="https://mail.google.com"
+                    target="_blank"
+                    style={styles.alertLink}
+                  >
+                    Go to Email
+                  </a>
+                  <span> • </span>
+                  <a
+                    href="#resend"
+                    style={styles.alertLink}
+                    onClick={handleResendEmail}
+                  >
+                    Resend Email
+                  </a>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
+        {/* ส่วนของกล่องโปรไฟล์ */}
         <div style={styles.container}>
           <div style={styles.header}></div>
-
-          <div style={styles.profileSection}>
+          <div
+            style={{
+              ...styles.profileSection,
+              alignItems: isMobileView ? "center" : "flex-start",
+              flexDirection: isMobileView ? "column" : "row",
+            }}
+          >
             <div style={styles.avatarContainer}>
               <img
                 id="profileImage"
@@ -294,17 +364,21 @@ const AccountSettings = () => {
                 }}
               />
             </div>
-
-            <div style={styles.photoActions}>
-              {/* ลิงก์ Use Google Photo */}
+            <div
+              style={{
+                ...styles.photoActions,
+                marginTop: isMobileView ? "0" : "80px",
+              }}
+            >
               <a
-                href="#"
-                style={styles.photoLink}
-                onClick={handleClick} // เมื่อคลิกให้แสดง Google Login
+                onClick={handleClick}
+                style={{
+                  ...styles.photoLink,
+                  fontSize: isMobileView ? "12px" : "16px",
+                }}
               >
                 Use Google Photo
               </a>
-
               {/* การเปลี่ยนรูปภาพ */}
               <input
                 type="file"
@@ -314,28 +388,41 @@ const AccountSettings = () => {
                 onChange={handleChangePhoto}
               />
               <a
-                href="#"
                 onClick={() => document.getElementById("fileInput").click()}
-                style={styles.photoLink}
+                style={{
+                  ...styles.photoLink,
+                  fontSize: isMobileView ? "12px" : "16px",
+                }}
               >
                 Change Photo
               </a>
-              {/* การลบรูปภาพ */}
-              <a href="#" onClick={handleRemovePhoto} style={styles.photoLink}>
+
+              <a
+                onClick={handleRemovePhoto}
+                style={{
+                  ...styles.photoLink,
+                  fontSize: isMobileView ? "12px" : "16px",
+                }}
+              >
                 Remove
               </a>
             </div>
           </div>
 
           <form style={styles.form}>
-            <div style={styles.formRow}>
+            <div
+              style={{
+                ...styles.formRow,
+                gridTemplateColumns: isMobileView ? "1fr" : "repeat(3, 1fr)",
+              }}
+            >
               <div style={styles.formGroup}>
                 <label style={styles.label}>First Name *</label>
                 <input
                   id="firstNameInput"
                   type="text"
-                  defaultValue={userData?.firstName || ""} // ใช้ค่าจาก userData หรือช่องว่าง
                   style={styles.input}
+                  defaultValue={userData?.firstName || ""}
                 />
               </div>
 
@@ -344,8 +431,8 @@ const AccountSettings = () => {
                 <input
                   id="lastNameInput"
                   type="text"
-                  defaultValue={userData?.lastName || ""}
                   style={styles.input}
+                  defaultValue={userData?.lastName || ""}
                 />
               </div>
 
@@ -354,19 +441,40 @@ const AccountSettings = () => {
                 <input
                   id="emailInput"
                   type="email"
-                  defaultValue={userData?.email || ""}
                   style={styles.input}
+                  defaultValue={userData?.email || ""}
                 />
               </div>
             </div>
 
-            <div style={styles.formRow}>
+            <div
+              style={{
+                ...styles.formRow,
+                gridTemplateColumns: isMobileView ? "1fr" : "repeat(3, 1fr)",
+                marginTop: isMobileView ? "0" : "24px",
+              }}
+            >
               <div style={styles.formGroup}>
                 <label style={styles.label}>Phone Number</label>
-                <div style={styles.phoneInputGroup}>
-                  <input type="tel" style={styles.phoneInput} />
+                <div
+                  style={{
+                    ...styles.phoneInputGroup,
+                    flexDirection: isMobileView ? "column" : "row",
+                    gap: isMobileView ? "8px" : "0",
+                  }}
+                >
+                  <input
+                    type="tel"
+                    style={{
+                      ...styles.phoneInput,
+                      width: isMobileView ? "100%" : "auto",
+                    }}
+                  />
                   <select
-                    style={styles.typeSelect}
+                    style={{
+                      ...styles.typeSelect,
+                      width: isMobileView ? "100%" : "100px",
+                    }}
                     value={selectedValue}
                     onChange={(e) => setSelectedValue(e.target.value)}
                   >
@@ -382,19 +490,29 @@ const AccountSettings = () => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                style={styles.passwordButton}
-                onClick={() => navigate("/changepassword")}
-              >
-                Change Password
-              </button>
+              <div style={styles.formGroup}>
+                <button
+                  type="button"
+                  onClick={() => navigate("/changepassword")}
+                  style={{
+                    ...styles.passwordButton,
+                    marginTop: isMobileView ? "0" : "auto",
+                    width: isMobileView ? "100%" : "auto",
+                  }}
+                >
+                  Change Password
+                </button>
+              </div>
 
               <div style={styles.formGroup}>
                 <button
                   type="submit"
-                  style={styles.saveButton}
                   onClick={handleSaveUpdates}
+                  style={{
+                    ...styles.saveButton,
+                    marginTop: isMobileView ? "0" : "auto",
+                    width: isMobileView ? "100%" : "auto",
+                  }}
                 >
                   Save Updates
                 </button>
@@ -403,42 +521,311 @@ const AccountSettings = () => {
           </form>
         </div>
 
+        {/* ส่วนของพาร์ทเนอร์ */}
         <div style={styles.sectiontitle}>Group Settings</div>
         <div style={styles.subsectiontitle}>Your Shared Search</div>
         <div style={styles.descriptionsmall}>
           Share your favorites, comments and saved searches with others.
         </div>
+        <div
+          style={{
+            ...styles.searchPartnerContainer,
+            width: isMobileView ? "auto" : "300px",
+          }}
+        >
+          <div
+            style={styles.searchPartnerButton}
+            onClick={() => setsearchPartnerModalOpen(true)}
+          >
+            <div
+              style={{
+                ...styles.searchPartnerIconWrapper,
+                width: isMobileView ? "24px" : "48px",
+                height: isMobileView ? "24px" : "48px",
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                style={{
+                  ...styles.searchPartnerIcon,
+                  width: isMobileView ? "16px" : "24px",
+                  height: isMobileView ? "16px" : "24px",
+                }}
+              >
+                <path
+                  d="M14.33 6.746C13.702 6.296 12.847 6 11.912 6c-1.275 0-2.7.55-3.904 2.011C6.805 6.55 5.38 6 4.106 6c-.936 0-1.79.296-2.417.746C.21 7.809-.48 10.043.37 12.167c1.087 2.711 6.537 6.858 7.495 7.572.09.066.2.066.288.001.966-.717 6.484-4.898 7.495-7.573.81-2.14.161-4.358-1.319-5.421zm8 0c-1.23-.882-3.335-1.168-5.21.209.976 1.69 1.175 3.867.4 5.92-.604 1.594-2.276 3.435-3.982 5.017a55.652 55.652 0 002.327 1.847c.088.066.2.066.29 0 .965-.717 6.482-4.898 7.493-7.572.81-2.14.161-4.358-1.319-5.421z"
+                  fillRule="evenodd"
+                />
+              </svg>
+            </div>
+            <span style={styles.searchPartnerText}>
+              Add your search partner
+            </span>
+          </div>
+        </div>
 
+        {/* โมดอลพาร์ทเนอร์ */}
+        {searchPartnerModalOpen && (
+          <div
+            style={{ ...styles.modalOverlay }}
+            onClick={() => setsearchPartnerModalOpen(false)}
+          >
+            <div
+              style={{
+                ...styles.modalContent,
+                minWidth:
+                  isMobileView && windowSize.width < 300 ? "250px" : "300px",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.headerpartner}>
+                <div style={styles.titleModal}>Add a member to your search</div>
+                <button
+                  style={styles.closeButton}
+                  onClick={() => setsearchPartnerModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <div style={styles.subsectiontitle}>
+                Search partners can share favorites, saved searches, comments,
+                tours, and offers.
+              </div>
+
+              <input
+                type="email"
+                placeholder="Enter your search partner's email"
+                value={partnerEmails.email}
+                onChange={(e) =>
+                  setPartnerEmails({ ...partnerEmails, email: e.target.value })
+                }
+                required
+                style={styles.inputField}
+              />
+
+              <button style={styles.sendButton} onClick={handleAddPartner}>
+                Send Invite
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/*ส่วนการลิงค์บัญชี*/}
         <div style={styles.sectiontitle}>Linked Accounts</div>
         <div style={styles.description}>
           Sign in to Redfin with your social apps. We never post anything on
           your behalf.
         </div>
-        <div style={styles.socialButtons}>
-          <button style={styles.socialButton}>
+        <div
+          style={{
+            ...styles.socialButtonsContainer,
+            flexDirection: isMobileView ? "column" : "row",
+          }}
+        >
+          <button
+            style={{
+              ...styles.socialButton,
+              width: isMobileView ? "100%" : "250px",
+            }}
+            onClick={() => setIsFacebookLinked(!isFacebookLinked)}
+          >
+            <img src={facebookIcon} alt="Facebook" style={styles.icon} />
+            {isFacebookLinked ? "Unlink Facebook" : "Connect Facebook"}
+          </button>
+
+          <button
+            style={{
+              ...styles.socialButton,
+              width: isMobileView ? "100%" : "250px",
+            }}
+            onClick={() => setIsGoogleLinked(!isGoogleLinked)}
+          >
             <img src={googleIcon} alt="Google" style={styles.icon} />
-            Unlink Google
+            {isGoogleLinked ? "Unlink Google" : "Connect Google"}
           </button>
         </div>
 
-        <div style={styles.sectiontitle}>Touring and Offers</div>
-        <div style={styles.subsectiontitle}>Pre-Approval Letter</div>
-        <div style={styles.descriptionsmall}>
-          Demonstrates your ability to obtain a mortgage for the amount in the
-          offer.
+        {/* ส่วนของทัวร์ริ่ง */}
+        <div style={styles.containerTouring}>
+          <div style={styles.sectiontitle}>Touring and Offers</div>
+
+          <div style={isMobileView ? styles.sectionMobile : styles.section}>
+            <div style={styles.contentWrapper}>
+              <div style={styles.subsectiontitle}>
+                Pre-Approval Letter
+                <span style={styles.status}>
+                  {isPreApproved ? "Approved" : "None specified"}
+                </span>
+              </div>
+              <div style={styles.descriptionsmall}>
+                Demonstrates your ability to obtain a mortgage for the amount in
+                the offer.
+              </div>
+            </div>
+            {!isPreApproved && (
+              <button
+                style={
+                  isMobileView
+                    ? { ...styles.button, ...styles.buttonMobile }
+                    : styles.button
+                }
+              >
+                Upload letter
+              </button>
+            )}
+          </div>
+
+          <div style={isMobileView ? styles.sectionMobile : styles.section}>
+            <div style={styles.contentWrapper}>
+              <div style={styles.subsectiontitle}>
+                Verify Your ID
+                <span style={styles.status}>
+                  {isVerified ? "Verified" : "Not yet verified"}
+                </span>
+              </div>
+              <div style={styles.descriptionsmall}>
+                To ensure the safety of our agents, we need you to verify your
+                identity before we can take you on a home tour.
+              </div>
+            </div>
+            {!isVerified && (
+              <Link to="/verify">
+                <button
+                  style={
+                    isMobileView
+                      ? { ...styles.button, ...styles.buttonMobile }
+                      : styles.button
+                  }
+                >
+                  Verify ID
+                </button>
+              </Link>
+            )}
+          </div>
         </div>
 
-        <div style={styles.subsectiontitle}>Verify Your ID</div>
+        {/* ส่วนของการรับข้อเสนอ */}
+        <div style={styles.containerAllow}>
+          <div style={styles.checkboxContainer}>
+            <input
+              type="checkbox"
+              checked={checked}
+              style={
+                checked
+                  ? { ...styles.checkbox, ...styles.checkboxChecked }
+                  : styles.checkbox
+              }
+              onChange={handleChange}
+            />
+            {checked && (
+              <svg viewBox="0 0 102 102" style={styles.checkmark}>
+                <path d="M35 91.6 1 57.6 16.1 42.5 35 61.4 85.9 10.4 101 25.5z"></path>
+              </svg>
+            )}
+          </div>
+
+          <label htmlFor="offer-insights" style={styles.labelAllow}>
+            Allow offer insights
+          </label>
+          <div style={styles.tooltipContainer}>
+            <div style={styles.infoIcon} onClick={toggleTooltip}>
+              <svg
+                className="SvgIcon label-info"
+                viewBox="0 0 24 24"
+                style={{ width: "14px", height: "14px" }}
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  fill="#585858"
+                  d="M12 0c6.617 0 12 5.383 12 12s-5.383 12-12 12S0 18.617 0 12 5.383 0 12 0zm1 16v-5.75a.25.25 0 00-.25-.25h-2.5a.25.25 0 00-.25.25V12h1v4h-1v1.75c0 .138.112.25.25.25h3.5a.25.25 0 00.25-.25V16h-1zm-.25-8h-1.5a.25.25 0 01-.25-.25v-1.5a.25.25 0 01.25-.25h1.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25z"
+                ></path>
+              </svg>
+            </div>
+
+            {showTooltip && (
+              <div
+                style={{
+                  ...styles.tooltipBox,
+                  width: isMobileView ? "300px" : "400px",
+                  fontSize: isMobileView ? "12px" : "14px",
+                  left: isMobileView ? "-40px" : "50%",
+                }}
+              >
+                <strong>Offer Insights</strong>
+                <br />
+                This feature helps other buyers understand local trends and get
+                a sense of what it takes to win in different neighborhoods. If
+                you make an offer with Redfin, we’ll publish anonymized data on
+                whether you won, how many competing offers you faced, how long
+                the property was on the market, how much you offered compared to
+                the list price, and the rough amount of the planned
+                down-payment.
+              </div>
+            )}
+          </div>
+        </div>
         <div style={styles.descriptionsmall}>
-          To ensure the safety of our agents, we need you to verify your
-          identity before we can take you on a home tour.
+          Allow offer insights for offers that you submit.
         </div>
 
+        {/* ส่วนของการลบบัญชี */}
         <div style={styles.sectiontitle}>Close Account</div>
         <div style={styles.descriptionsmall}>
           This will remove your login information from our system and you will
           not be able to login again. It cannot be undone.
         </div>
+        <button
+          style={{
+            ...styles.deleteButton,
+            width: isMobileView ? "100%" : "250px",
+          }}
+          onClick={() => setdeleteAccountModalOpen(true)}
+        >
+          Delete Your Account
+        </button>
+
+        {/* โมดอลลบบัญชี */}
+        {deleteAccountModalOpen && (
+          <div
+            style={styles.modalOverlay}
+            onClick={() => setdeleteAccountModalOpen(false)}
+          >
+            <div
+              style={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={styles.headerpartner}>
+                <div style={styles.titleModal}>Delete Account</div>
+                <button
+                  style={styles.closeButton}
+                  onClick={() => setdeleteAccountModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <div style={styles.subsectiontitle}>
+                Are you sure you want to delete your account? This cannot be
+                undone.
+              </div>
+              <div style={styles.buttonContainer}>
+                <button
+                  style={styles.whiteButton}
+                  onClick={() => setdeleteAccountModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  style={styles.redButton}
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <Footer />
     </>
@@ -481,7 +868,6 @@ const styles = {
   alertTextWithLinks: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     width: "100%",
   },
   alertText: {
@@ -493,8 +879,7 @@ const styles = {
   alertLinks: {
     display: "flex",
     gap: "5px",
-    justifyContent: "flex-end",
-    marginLeft: "auto",
+    lineHeight: "1.5",
   },
   alertLink: {
     color: "#1080a2",
@@ -518,7 +903,6 @@ const styles = {
     display: "flex",
     alignItems: "flex-start",
     gap: "24px",
-    marginBottom: "0",
     marginTop: "-80px",
     padding: "20px",
   },
@@ -540,17 +924,16 @@ const styles = {
     gap: "16px",
     alignItems: "center",
     paddingTop: "0px",
-    marginTop: "80px",
   },
   photoLink: {
     background: "none",
     border: "none",
-    color: "#0066ff",
+    color: "#1080a2",
     cursor: "pointer",
-    fontSize: "14px",
     padding: "4px 0",
     textDecoration: "none",
   },
+
   form: {
     display: "flex",
     flexDirection: "column",
@@ -559,7 +942,6 @@ const styles = {
   },
   formRow: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
     gap: "24px",
   },
   formGroup: {
@@ -603,38 +985,42 @@ const styles = {
   passwordButton: {
     width: "100%",
     height: "40px",
-    marginTop: "auto",
     padding: "8px 16px",
-    fontSize: "14px",
+    fontSize: "16px",
     color: "#4b5563",
-    backgroundColor: "#f3f4f6",
-    border: "none",
-    borderRadius: "4px",
+    backgroundColor: "#e2e2e2",
+    border: "1px solid #ccc",
     cursor: "pointer",
+    fontWeight: "600",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
   },
   saveButton: {
     width: "100%",
     height: "40px",
-    marginTop: "auto",
     padding: "8px 16px",
-    fontSize: "14px",
-    fontWeight: "500",
+    fontSize: "16px",
     color: "#ffffff",
-    backgroundColor: "#dc2626",
-    border: "none",
-    borderRadius: "4px",
+    backgroundColor: "#c82021",
+    border: "1px solid #d1d5db",
     cursor: "pointer",
+    fontWeight: "600",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
   },
 
   sectiontitle: {
     fontSize: "22px",
     marginTop: "20px",
     color: "#333",
+    marginBottom: "10px",
   },
   subsectiontitle: {
     fontSize: "16px",
-    marginTop: "20px",
     color: "#333",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
   },
   descriptionsmall: {
     fontSize: "14px",
@@ -649,17 +1035,119 @@ const styles = {
     marginBottom: "20px",
   },
 
-  socialButtons: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
+  searchPartnerContainer: {
+    backgroundColor: "#fff",
+    border: "2px dashed #ddd",
+    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+    padding: "35px 20px",
     marginBottom: "20px",
-    width: "300px",
   },
-  socialButton: {
+  searchPartnerButton: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "flex-start",
+    gap: "16px",
+    cursor: "pointer",
+  },
+  searchPartnerIconWrapper: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    backgroundColor: "#f3f4f6",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "1px solid #d1d5db",
+  },
+  searchPartnerPlus: {
+    fontSize: "24px",
+    color: "#4b5563",
+    fontWeight: "300",
+  },
+  searchPartnerIcon: {
+    fill: "#4b5563",
+  },
+  searchPartnerText: {
+    color: "#4b5563",
+    fontSize: "16px",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
+  },
+
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "20px",
+    zIndex: 1000,
+  },
+  modalContent: {
+    background: "#fff",
+    padding: "20px",
+    minWidth: "300px",
+    maxWidth: "600px",
+    boxSizing: "border-box",
+    position: "relative",
+    width: "80%",
+  },
+  headerpartner: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "15px",
+  },
+  titleModal: {
+    fontSize: "24px",
+    marginBottom: "0",
+    color: "#333",
+    fontWeight: "600",
+    lineHeight: "1",
+  },
+  closeButton: {
+    background: "transparent",
+    border: "none",
+    fontSize: "50px",
+    cursor: "pointer",
+    color: "#888",
+    lineHeight: "1",
+    padding: "0",
+  },
+  inputField: {
+    width: "100%",
+    padding: "10px",
+    margin: "10px 0",
+    border: "1px solid #ccc",
+  },
+  sendButton: {
+    background: "#DC2626",
+    color: "#fff",
+    padding: "8px 16px",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "600",
+    marginLeft: "auto",
+    display: "block",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
+  },
+
+  socialButtonsContainer: {
+    display: "flex",
+    gap: "20px",
+    marginBottom: "50px",
+    alignItems: "center",
+  },
+  socialButton: {
+    width: "250px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center", // จัดข้อความให้อยู่ตรงกลาง
     padding: "10px",
     border: "1px solid #ccc",
     borderRadius: "2px",
@@ -671,10 +1159,182 @@ const styles = {
     fontWeight: "600",
     fontFamily:
       '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
+    position: "relative", // สำหรับวางไอคอนแบบ absolute
+  },
+  buttonText: {
+    flex: 1,
+    textAlign: "center",
   },
   icon: {
     width: "20px",
-    marginRight: "10px",
+    position: "absolute",
+    left: "20px",
+  },
+
+  containerTouring: {
+    width: "100%",
+  },
+  section: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: "8px",
+    paddingBottom: "16px",
+    marginTop: "8px",
+  },
+  sectionMobile: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginBottom: "8px",
+    paddingBottom: "16px",
+    marginTop: "8px",
+  },
+  contentWrapper: {
+    flex: 1,
+  },
+  status: {
+    color: "#ef4444",
+    fontSize: "14px",
+    fontWeight: "normal",
+    marginLeft: "8px",
+  },
+  button: {
+    backgroundColor: "#f5f5f5",
+    border: "1px solid #D1D5DB",
+    borderRadius: "4px",
+    padding: "8px 16px",
+    color: "#585858",
+    fontSize: "14px",
+    fontWeight: "600",
+    cursor: "pointer",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
+    minWidth: "120px",
+    ":hover": {
+      backgroundColor: "#F9FAFB",
+    },
+  },
+  buttonMobile: {
+    alignSelf: "flex-start",
+  },
+
+  containerAllow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    position: "relative",
+  },
+  tooltipContainer: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+  },
+  tooltipBox: {
+    position: "absolute",
+    bottom: "100%",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 1000,
+    backgroundColor: "#fff",
+    padding: "12px",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.15)",
+    width: "400px",
+    maxHeight: "400px",
+    overflowY: "auto",
+    whiteSpace: "normal",
+    wordWrap: "break-word",
+    lineHeight: "1.4",
+    marginBottom: "8px",
+    fontSize: "14px",
+    textAlign: "justify",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
+    color: "#585858",
+  },
+  checkboxContainer: {
+    position: "relative",
+    display: "inline-block",
+    width: "24px",
+    height: "24px",
+  },
+  checkbox: {
+    cursor: "pointer",
+    width: "20px",
+    height: "20px",
+    border: "0.5px solid  #585858",
+    backgroundColor: "#fff",
+    appearance: "none",
+    position: "relative",
+  },
+  checkboxChecked: {
+    backgroundColor: "#1080a2",
+    borderColor: "#1080a2",
+  },
+  checkmark: {
+    position: "absolute",
+    top: "44%",
+    left: "44%",
+    transform: "translate(-50%, -50%)",
+    width: "16px",
+    height: "16px",
+    fill: "#fff",
+    pointerEvents: "none",
+  },
+  infoIcon: {
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+  },
+  labelAllow: {
+    fontSize: "16px",
+    color: "#333",
+  },
+
+  deleteButton: {
+    width: "250px",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "10px",
+    border: "1px solid #ccc",
+    borderRadius: "2px",
+    cursor: "pointer",
+    backgroundColor: "#C82021",
+    fontSize: "16px",
+    gap: "20px",
+    color: "#fff",
+    fontWeight: "600",
+    fontFamily:
+      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
+  },
+
+  buttonContainer: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px",
+    marginTop: "15px",
+    flexDirection: "row",
+  },
+  whiteButton: {
+    backgroundColor: "#fff",
+    color: "#585858",
+    padding: "10px 20px",
+    border: "1px solid #585858",
+    cursor: "pointer",
+    fontSize: "14px",
+    minWidth: "90px",
+  },
+  redButton: {
+    backgroundColor: "#C82021",
+    color: "#fff",
+    padding: "10px 20px",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "14px",
+    minWidth: "90px",
   },
 };
 

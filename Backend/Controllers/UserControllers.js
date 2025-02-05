@@ -66,6 +66,60 @@ const registerUser = async (req, res) => {
   }
 };
 
+//ฟังก์ชันสมัครสมาชิกโดยใช้เเค่เมล
+const register2User = async (req, res) => {
+  const { email, profileImage } = req.body; // เอา firstName และ lastName ออก
+
+  try {
+    // ตรวจสอบว่าอีเมลมีอยู่แล้วหรือไม่
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists!" });
+    }
+
+    // สร้างผู้ใช้ใหม่ (ไม่มี firstName และ lastName)
+    const newUser = new User({
+      email,
+      profileImage: profileImage || undefined,
+      isVerified: false,
+    });
+    await newUser.save();
+
+    // สร้าง Token สำหรับตั้งรหัสผ่าน
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    newUser.passwordResetToken = resetToken;
+    newUser.passwordResetExpires = Date.now() + 3600000; // 1 ชั่วโมง
+    await newUser.save();
+
+    // สร้างลิงก์ตั้งรหัสผ่าน
+    if (!process.env.CLIENT_URL) {
+      throw new Error("CLIENT_URL is not defined in environment variables.");
+    }
+    const resetLink = `${process.env.CLIENT_URL}/set-password/${resetToken}`;
+
+    // ส่งอีเมลให้ผู้ใช้ตั้งรหัสผ่าน
+    await sendEmail(
+      email,
+      "Set Your Password",
+      `<p>Click the link below to set your password:</p>
+       <a href="${resetLink}">Set Password</a>
+       <p>This link will expire in 1 hour.</p>`
+    );
+
+    res.status(201).json({
+      message:
+        "Signup successful! Please check your email to set your password.",
+      token: resetToken,
+      resetLink, // สำหรับการ debug
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error registering user!",
+      error: error.message,
+    });
+  }
+};
+
 // ฟังก์ชันตั้งรหัสผ่าน
 const setPassword = async (req, res) => {
   const token = req.params.token || req.body.token;
@@ -628,9 +682,143 @@ const changePassword = async (req, res) => {
   }
 };
 
+//ฟังก์ชันเช็คอีเมลในฐานข้อมูล
+const checkEmail = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (user) {
+      return res
+        .status(200)
+        .json({ exists: true, hasPassword: !!user.password });
+    } else {
+      return res.status(200).json({ exists: false });
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+//ส่งOTP
+const sendOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Email not found!" });
+    }
+
+    // สร้างรหัส OTP 6 หลัก
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiration = Date.now() + 10 * 60 * 1000; // หมดอายุใน 10 นาที
+
+    // บันทึก OTP ลงฐานข้อมูล
+    user.otpCode = otp;
+    user.otpExpires = otpExpiration;
+    await user.save();
+
+    // ส่งอีเมล OTP
+    await sendEmail(email, "Your OTP Code", `<p>Your OTP: <b>${otp}</b></p>`);
+
+    res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error sending OTP", error: error.message });
+  }
+};
+
+//ยืนยันOTP
+const verifyOTP = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user || user.otpCode !== otp || Date.now() > user.otpExpires) {
+      return res.status(400).json({ message: "Invalid or expired OTP!" });
+    }
+
+    // OTP ถูกต้อง → ให้เข้าสู่ระบบได้
+    user.otpCode = null; // ล้างค่า OTP
+    user.otpExpires = null;
+    await user.save();
+
+    // สร้าง JWT Token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d", // หมดอายุใน 7 วัน
+      }
+    );
+
+    // ส่ง Token ไปเก็บใน HTTP-Only Cookie
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // ใช้ secure=true เมื่ออยู่บน HTTPS
+      sameSite: "Strict", // ป้องกัน CSRF
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+    });
+
+    res.json({ message: "OTP verified! Login successful." });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error verifying OTP", error: error.message });
+  }
+};
+
+//หน้าหลักเข้าสู่ระบบด้วยรหัสผ่าน
+const passwordLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password!" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password!" });
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // เก็บ token ไว้ใน cookies
+    res.cookie("token", token, {
+      httpOnly: true, // ป้องกันการเข้าถึงจาก JavaScript
+      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ใน production
+      maxAge: 3600 * 1000, // เวลาหมดอายุ 1 ชั่วโมง
+      sameSite: "Strict", // ป้องกันการใช้คุกกี้จาก cross-site request
+    });
+    console.log("Token sent in cookie:", token);
+
+    res.status(200).json({
+      message: "Login successful!",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        profileImage: user.profileImage,
+      },
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({ message: "Error logging in!" });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
+  register2User,
   loginUser,
   logoutUser,
   resendEmail,
@@ -646,4 +834,8 @@ module.exports = {
   updateProfilePicture,
   removeProfilePicture,
   updateProfile,
+  checkEmail,
+  sendOTP,
+  verifyOTP,
+  passwordLogin,
 };

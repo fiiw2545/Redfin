@@ -4,11 +4,11 @@ const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
-      required: true,
+      required: false,
     },
     lastName: {
       type: String,
-      required: true,
+      required: false,
     },
     email: {
       type: String,
@@ -54,6 +54,12 @@ const userSchema = new mongoose.Schema(
     },
     passwordResetExpires: {
       type: Date, // เวลาที่ token หมดอายุ
+    },
+    otpCode: {
+      type: String, // เก็บรหัส OTP 6 หลัก
+    },
+    otpExpires: {
+      type: Date, // เวลาหมดอายุของ OTP
     },
   },
   { timestamps: true } // เพิ่มเวลา createdAt และ updatedAt ให้อัตโนมัติ
