@@ -23,6 +23,7 @@ import NotificationSettings from "./pages/notificationSettings";
 import AccountSettings from "./pages/accountSettings";
 import ChangePasswordPage from "./pages/changepassword";
 import VerifyEmail from "./pages/VerifyEmail";
+import VerifyID from "./pages/verifyId";
 
 const App = () => {
   return (
@@ -52,6 +53,8 @@ const App = () => {
         <Route path="/account-settings" element={<AccountSettings />} />
         <Route path="/changepassword" element={<ChangePasswordPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
+
+        <Route path="/verify" element={<VerifyID />} />
       </Routes>
     </Router>
   );

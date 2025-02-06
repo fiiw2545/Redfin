@@ -16,6 +16,7 @@ const {
   verifyEmail,
   sendOTP,
   verifyOTP,
+  deleteAccount,
   passwordLogin,
   googleLogin,
   forgotPassword,
@@ -49,6 +50,7 @@ router.post("/forgot-password", forgotPassword); // เส้นทางรี�
 router.get("/email/:token", getEmailFromToken); // เส้นทางดึงอีเมล
 router.get("/email", getEmailFromCookie); // เส้นทางดึงอีเมล
 router.post("/check-email", checkEmail); //เช็คอีเมลในฐานข้อมูล
+router.delete("/deleteAccount", deleteAccount); //เช็คอีเมลในฐานข้อมูล
 router.post(
   "/update-profile-picture",
   upload.single("profileImage"), // ใช้มิดเดิลแวร์นี้เพื่อจัดการกับการอัปโหลดไฟล์

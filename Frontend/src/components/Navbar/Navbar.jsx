@@ -94,6 +94,7 @@ const Navbar = () => {
 
       {windowSize.width >= 980 ? (
         // เงื่อนไขสำหรับหน้าจอกว้างกว่า 980px
+
         <div
           className={`navbar__menu-actions ${isHomePage ? "navbar--home" : ""}`}
         >
@@ -259,20 +260,32 @@ const Navbar = () => {
         // เงื่อนไขสำหรับหน้าจอแคบกว่า 980px
         <>
           <div className="navbar__menu-actions">
-            <span className="sign-in" onClick={openModal}>
-              Sign in
-            </span>
-            <button className="hamburger-menu" onClick={toggleMenu}>
-              <svg
-                className="SvgIcon menu hamNavIcon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M20.75 8H3.25A.25.25 0 013 7.75v-1.5A.25.25 0 013.25 6h17.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25zm0 5H3.25a.25.25 0 01-.25-.25v-1.5a.25.25 0 01.25-.25h17.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25zm0 5H3.25a.25.25 0 01-.25-.25v-1.5a.25.25 0 01.25-.25h17.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25z" />
-              </svg>
-            </button>
+            {!isLoginOrSetPasswordPage && (
+              <>
+                {/* เมื่อผู้ใช้ยังไม่ล็อกอิน แสดงปุ่ม Sign in */}
+                {!isLoggedIn && (
+                  <span className="sign-in" onClick={openModal}>
+                    Sign in
+                  </span>
+                )}
+
+                <button className="hamburger-menu" onClick={toggleMenu}>
+                  <svg
+                    className="SvgIcon menu hamNavIcon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M20.75 8H3.25A.25.25 0 013 7.75v-1.5A.25.25 0 013.25 6h17.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25zm0 5H3.25a.25.25 0 01-.25-.25v-1.5a.25.25 0 01.25-.25h17.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25zm0 5H3.25a.25.25 0 01-.25-.25v-1.5a.25.25 0 01.25-.25h17.5a.25.25 0 01.25.25v1.5a.25.25 0 01-.25.25z" />
+                  </svg>
+                </button>
+                <Sidebar
+                  isOpen={isMenuOpen}
+                  toggleMenu={toggleMenu}
+                  logo={logo}
+                />
+              </>
+            )}
           </div>
-          <Sidebar isOpen={isMenuOpen} toggleMenu={toggleMenu} logo={logo} />
         </>
       )}
       <Modal isOpen={isModalOpen} onClose={closeModal} />

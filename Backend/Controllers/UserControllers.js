@@ -811,6 +811,40 @@ const passwordLogin = async (req, res) => {
   }
 };
 
+//ลบบัญชี
+const deleteAccount = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "No token provided. Access denied." });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Invalid or expired token." });
+      }
+
+      // ใช้ decoded.id หรือ decoded._id ตามที่คุณใช้ในการ sign token
+      const userId = decoded.id; // หรือ decoded._id
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await User.findByIdAndDelete(userId);
+      res.clearCookie("token");
+      res.status(200).json({ message: "Account deleted successfully" });
+    });
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    res
+      .status(500)
+      .json({ message: "Error deleting account", error: error.message });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
@@ -834,4 +868,5 @@ module.exports = {
   sendOTP,
   verifyOTP,
   passwordLogin,
+  deleteAccount,
 };

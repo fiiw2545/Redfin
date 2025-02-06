@@ -29,6 +29,7 @@ const AccountSettings = () => {
   const [isPreApproved, setIsPreApproved] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [checked, setChecked] = useState(false);
+  const [error, setError] = useState(null);
   const [deleteAccountModalOpen, setdeleteAccountModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,13 +59,17 @@ const AccountSettings = () => {
       setIsLoading(true); // ตั้งสถานะการโหลดเมื่อกำลังลบ
       setError(null); // ลบข้อผิดพลาดเก่า (ถ้ามี)
 
-      // เรียก API หรือการลบข้อมูลในระบบของคุณที่นี่
-      // await deleteAccountAPI();
+      // เรียก API สำหรับลบบัญชี
+      await axios.delete("http://localhost:5000/api/users/deleteAccount", {
+        withCredentials: true, // ส่งคุกกี้ (ที่มี token) ไปด้วย
+      });
 
       // ปิด modal หลังการลบสำเร็จ
       setdeleteAccountModalOpen(false);
+      alert("Your account has been deleted successfully.");
+      // อาจจะต้อง log out หรือ redirect ผู้ใช้ไปที่หน้าอื่น
+      window.location.href = "/"; // เปลี่ยนเส้นทางไปหน้าแรกหรือหน้าอื่น ๆ ที่ต้องการ
     } catch (error) {
-      // หากเกิดข้อผิดพลาดระหว่างการลบ
       setError("Error occurred while deleting the account. Please try again.");
     } finally {
       setIsLoading(false); // หยุดสถานะการโหลด
