@@ -16,6 +16,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const navigate = useNavigate();
 
   // อ่านข้อมูลผู้ใช้จาก cookies เมื่อผู้ใช้ล็อกอิน
@@ -45,6 +47,24 @@ const Navbar = () => {
 
     fetchUserData();
   }, [isLoggedIn]);
+
+  // ฟังก์ชันดึงข้อมูลผู้ใช้
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/users/information",
+          { withCredentials: true }
+        );
+
+        setUserData(response.data); // ใช้ setUserData ที่นี่
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData(); // เรียกใช้ฟังก์ชันนี้เมื่อ component mount
+  }, []); // ค่าที่อยู่ใน array จะบอกว่าเมื่อไรฟังก์ชันนี้จะถูกเรียกใช้ใหม่
 
   // ฟังก์ชันออกจากระบบ
   const handleSignOut = async () => {
@@ -215,14 +235,21 @@ const Navbar = () => {
                       {user.firstName} {user.lastName}
                     </span>
                     <img
+                      id="profileImage"
                       src={
-                        user?.profileImage
-                          ? `data:image/jpeg;base64,${user.profileImage}`
-                          : "path_to_default_image.jpg"
+                        previewImage || // ✅ แสดงรูปที่เลือกไว้ก่อนอัปโหลด
+                        (userData?.profileImage
+                          ? `data:image/jpeg;base64,${userData.profileImage}`
+                          : "/png-clipart-computer-icons-user-user-heroes-black.png")
                       }
-                      alt={user?.firstName}
+                      alt={user?.firstName || "User"}
                       className="user-avatar"
+                      onError={(e) => {
+                        e.target.src =
+                          "/png-clipart-computer-icons-user-user-heroes-black.png"; // ✅ ถ้ารูปภาพเสีย ให้ใช้รูปดีฟอลต์
+                      }}
                     />
+
                     <div className="dropdown-content">
                       <div className="dropdown-column">
                         <h4>My redfin</h4>
