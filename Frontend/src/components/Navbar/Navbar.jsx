@@ -312,10 +312,13 @@ const Navbar = () => {
               {!isLoginOrSetPasswordPage &&
                 (isLoggedIn ? (
                   <div className="user-dropdown">
-                    <span className="user-name">
-                      {user.firstName} {user.lastName}
+                    <span
+                      className={`user-name ${
+                        isHomePage ? "user-name--home" : ""
+                      }`}
+                    >
+                      {userData?.firstName}
                     </span>
-                    <span className="profile-name">{userData?.firstName}</span>
                     <img
                       id="profileImage"
                       src={

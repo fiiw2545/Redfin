@@ -305,6 +305,10 @@ const verifyEmail = async (req, res) => {
 const googleLogin = async (req, res) => {
   const { token } = req.body;
 
+  if (!token) {
+    return res.status(400).json({ message: "Token is required!" });
+  }
+
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
@@ -336,9 +340,20 @@ const googleLogin = async (req, res) => {
       await user.save(); // บันทึกการเปลี่ยนแปลง
     }
 
+    // สร้าง JWT Token
     const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "1h",
     });
+
+    // เก็บ token ไว้ใน cookies
+    res.cookie("token", jwtToken, {
+      httpOnly: true, // ป้องกัน JavaScript เข้าถึง
+      secure: process.env.NODE_ENV === "production", // ใช้ HTTPS ใน production
+      maxAge: 3600 * 1000, // หมดอายุใน 1 ชั่วโมง
+      sameSite: "Strict", // ป้องกัน Cross-Site Request Forgery (CSRF)
+    });
+
+    console.log("Token sent in cookie:", jwtToken);
 
     res.status(200).json({
       message: "Google Login successful!",

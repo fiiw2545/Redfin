@@ -20,18 +20,16 @@ const LoginPage = () => {
       // ส่ง Token ไป Backend เพื่อทำ Authentication
       const res = await axios.post(
         "http://localhost:5000/api/users/google-login",
-        {
-          token: response.credential, // ส่ง Google Token ไป Backend
-        }
+
+        { token: response.credential }, // ส่ง Google Token ไป Backend
+        { withCredentials: true }
       );
 
       if (res.status === 200) {
-        // เก็บข้อมูลที่ได้จาก Backend ลง localStorage
-        localStorage.setItem("authToken", res.data.token);
         localStorage.setItem(
           "user",
           JSON.stringify({
-            name: res.data.user.name,
+            name: res.data.user.fullName,
             email: res.data.user.email,
             profileImage: res.data.user.profileImage || null,
           })
