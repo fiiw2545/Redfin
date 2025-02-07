@@ -104,6 +104,27 @@ const Navbar = () => {
   const isLoginOrSetPasswordPage =
     pathname === "/login" || pathname === "/set-password";
 
+  const hideSearchBox =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/chage-password" ||
+    pathname === "/set-password/:token" ||
+    pathname === "/resetpassword/:token";
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (event) => {
+    if (event.key === "Enter" && searchQuery.trim() !== "") {
+      navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (searchQuery.trim() !== "") {
+      navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <header className={`navbar ${isHomePage ? "navbar--home" : ""}`}>
       <div className="navbar__logo">
@@ -112,9 +133,69 @@ const Navbar = () => {
         </Link>
       </div>
 
-      {windowSize.width >= 980 ? (
-        // เงื่อนไขสำหรับหน้าจอกว้างกว่า 980px
+      {/* ค้นหา */}
+      {!hideSearchBox && (
+        <div className="navbar__search-wrapper">
+          {windowSize.width >= 1280 ? (
+            // ค้นหาแบบ desktop
+            <div className="navbar__search-container desktop">
+              <input
+                type="text"
+                placeholder="City, Address, School, Agent, ZIP"
+                className="navbar__search-input desktop"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+              />
+              <button
+                className="search-button-desktop"
+                onClick={handleSearchClick}
+              >
+                <svg
+                  className="search-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M23.884 21.763l-7.554-7.554a8.976 8.976 0 001.526-6.835C17.203 3.68 14.204.72 10.502.122a9.01 9.01 0 00-10.38 10.38c.598 3.702 3.558 6.7 7.252 7.354a8.976 8.976 0 006.835-1.526l7.554 7.554a.25.25 0 00.353 0l1.768-1.768a.25.25 0 000-.353zM2 9c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7-7-3.14-7-7z"
+                    fill="#ffffff"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            // ค้นหาแบบ Mobile
+            <div className="navbar__search-container mobile">
+              <input
+                type="text"
+                placeholder="City, Address, School, Agent, ZIP"
+                className="navbar__search-input mobile"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+              />
+              <button
+                className="search-button-mobile"
+                onClick={handleSearchClick}
+              >
+                <svg
+                  className="search-icon"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M23.884 21.763l-7.554-7.554a8.976 8.976 0 001.526-6.835C17.203 3.68 14.204.72 10.502.122a9.01 9.01 0 00-10.38 10.38c.598 3.702 3.558 6.7 7.252 7.354a8.976 8.976 0 006.835-1.526l7.554 7.554a.25.25 0 00.353 0l1.768-1.768a.25.25 0 000-.353zM2 9c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7-7-3.14-7-7z"
+                    fill="#585858"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
+      {windowSize.width >= 1280 ? (
+        // เงื่อนไขสำหรับหน้าจอกว้างกว่า 1280px
+        // แถบเมนูแบบ desktop
         <div
           className={`navbar__menu-actions ${isHomePage ? "navbar--home" : ""}`}
         >
@@ -229,11 +310,12 @@ const Navbar = () => {
             </nav>
             <div className="navbar__actions">
               {!isLoginOrSetPasswordPage &&
-                (user ? (
+                (isLoggedIn ? (
                   <div className="user-dropdown">
                     <span className="user-name">
                       {user.firstName} {user.lastName}
                     </span>
+                    <span className="profile-name">{userData?.firstName}</span>
                     <img
                       id="profileImage"
                       src={
@@ -249,7 +331,6 @@ const Navbar = () => {
                           "/png-clipart-computer-icons-user-user-heroes-black.png"; // ✅ ถ้ารูปภาพเสีย ให้ใช้รูปดีฟอลต์
                       }}
                     />
-
                     <div className="dropdown-content">
                       <div className="dropdown-column">
                         <h4>My redfin</h4>
@@ -257,18 +338,17 @@ const Navbar = () => {
                         <a href="/saved-searches">Saved searches</a>
                         <a href="/open-house-schedule">Open house schedule</a>
                         <a href="/appointments">Appointments</a>
-                        <a href="#">Owner</a>
-                        <a href="#">Dashboard</a>
+                        <a href="/owner-dashboard">Owner Dashboard</a>
                         <a href="/your-agent">Agent</a>
                         <a href="/offers">Offers</a>
                         <a href="/reviews">Reviews</a>
                       </div>
                       <div className="dropdown-column">
                         <h4>Settings</h4>
-                        <a href="/notification-settings">
+                        <Link to="/notification-settings">
                           Notification settings
-                        </a>
-                        <a href="/account-settings">Account settings</a>
+                        </Link>
+                        <Link to="/account-settings">Account settings</Link>
                         <a href="#" onClick={handleSignOut}>
                           Sign out
                         </a>
@@ -285,6 +365,7 @@ const Navbar = () => {
         </div>
       ) : (
         // เงื่อนไขสำหรับหน้าจอแคบกว่า 980px
+        // แถบเมนูแบบ desktop
         <>
           <div className="navbar__menu-actions">
             {!isLoginOrSetPasswordPage && (
