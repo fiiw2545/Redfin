@@ -2,13 +2,22 @@ import React, { useState, useEffect } from "react";
 import "./Modal.css";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
+import { useNavigate } from "react-router-dom";
 
-const Modal = ({ isOpen, onClose }) => {
-  const [stepHistory, setStepHistory] = useState([1]); // History of modal steps
-  const [email, setEmail] = useState(""); // User email
+const Modal = ({
+  isOpen,
+  onClose,
+  setUser: setUserData,
+  setIsLoggedIn,
+  setModalOpen,
+}) => {
+  const [stepHistory, setStepHistory] = useState([1]);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userHasPassword, setUserHasPassword] = useState(true); // State to check if user has a password
-  const [otp, setOtp] = useState(""); // เก็บค่าที่ผู้ใช้กรอก
+  const [userHasPassword, setUserHasPassword] = useState(true);
+  const [otp, setOtp] = useState("");
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
   if (!isOpen) return null;
 
@@ -171,31 +180,46 @@ const Modal = ({ isOpen, onClose }) => {
   const handleSetPassword = () => changeStep(3);
   const handleForgotPassword = () => changeStep(5);
 
-  const handleSuccess = async (credentialResponse) => {
+  //Google
+  const handleSuccess = async (response) => {
+    console.log("Google Response:", response); // ตรวจสอบข้อมูลที่ Google ส่งมา
+    if (!response.credential) {
+      alert("Google login failed: No credential received.");
+      return;
+    }
+
     try {
+      // ส่ง Token ไป Backend เพื่อทำ Authentication
       const res = await axios.post(
         "http://localhost:5000/api/users/google-login",
-        { token: credentialResponse.credential }
+        { token: response.credential }, // ส่ง Google Token ไป Backend
+        { withCredentials: true }
       );
 
       if (res.status === 200) {
-        localStorage.setItem("authToken", res.data.token);
         localStorage.setItem(
           "user",
           JSON.stringify({
-            name: res.data.user.fullName,
+            firstName: res.data.user.firstName,
             email: res.data.user.email,
             profileImage: res.data.user.profileImage || null,
           })
         );
 
-        onClose();
-        window.location.href = "/";
+        // อัปเดต state เพื่อเปลี่ยน Navbar เป็นโปรไฟล์ผู้ใช้
+        setUserData(res.data.user);
+
+        setIsLoggedIn(true);
+
+        // ปิด Modal
+        setModalOpen(false);
+
+        window.location.reload();
       }
     } catch (error) {
       console.error(
         "Google Login Error:",
-        error.response?.data || error.message
+        error.response ? error.response.data : error.message
       );
       alert("Failed to sign in with Google. Please try again.");
     }
@@ -204,6 +228,14 @@ const Modal = ({ isOpen, onClose }) => {
   const handleError = () => {
     console.error("Google Sign-In Failed");
     alert("Google Sign-In Failed. Please try again.");
+  };
+
+  const styles = {
+    socialButtons: {
+      display: "flex",
+      justifyContent: "center",
+      marginTop: "10px",
+    },
   };
 
   return (
@@ -239,13 +271,9 @@ const Modal = ({ isOpen, onClose }) => {
             <div className="separator">
               <span>or</span>
             </div>
-            <GoogleLogin
-              onSuccess={handleSuccess}
-              onError={handleError}
-              useOneTap
-              text="continue_with"
-              size="large"
-            />
+            <div style={styles.socialButtons}>
+              <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+            </div>
             <p>
               By signing in you agree to Redfin's <a href="#">Terms of Use</a>{" "}
               and <a href="#">Privacy Policy</a>.

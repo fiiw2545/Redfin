@@ -46,7 +46,7 @@ const Navbar = () => {
     };
 
     fetchUserData();
-  }, [isLoggedIn]);
+  }, []);
 
   // ฟังก์ชันดึงข้อมูลผู้ใช้
   useEffect(() => {
@@ -399,7 +399,13 @@ const Navbar = () => {
           </div>
         </>
       )}
-      <Modal isOpen={isModalOpen} onClose={closeModal} />
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        setUser={setUser}
+        setIsLoggedIn={setIsLoggedIn}
+        setModalOpen={setIsModalOpen} // ส่ง setModalOpen ไปที่ Modal
+      />
     </header>
   );
 };
