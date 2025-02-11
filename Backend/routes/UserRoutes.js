@@ -28,6 +28,8 @@ const {
   updateProfilePicture,
   removeProfilePicture,
   updateProfile,
+  checkLoginType,
+  getUserProfileGoogle,
 } = require("../Controllers/UserControllers"); // Import Controllers
 const { authenticateToken } = require("../middleware/UserMiddleware");
 
@@ -58,5 +60,12 @@ router.post(
 ); // Route สำหรับอัปเดตรูปภาพ
 router.put("/update-profile-picture", removeProfilePicture); //ลบรูปภาพ
 router.put("/update-profile", updateProfile); //อัพเดทในฐานข้อมูล
+router.get("/check-login-type", checkLoginType); //ตรวจสอบประเภทการล็อคอิน
+
+router.get("/get-google-client-id", (req, res) => {
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID });
+}); // เส้นทางเพื่อดึง GOOGLE_CLIENT_ID
+
+router.get("/getProfileGoogle", getUserProfileGoogle); //ดึงรูปภาพgoogleจากฐานข้อมูล
 
 module.exports = router;

@@ -17,7 +17,9 @@ const AccountSettings = () => {
   const [selectedValue, setSelectedValue] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
   const [email, setEmail] = useState("");
-  const navigate = useNavigate();
+  const [googleProfileImage, setGoogleProfileImage] = useState(""); // รูป Google เท่านั้น
+  const [profileImage, setProfileImage] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ ใช้เพื่อแสดงสถานะโหลด
   const [userData, setUserData] = useState(null); // ตัวแปรสำหรับเก็บข้อมูลผู้ใช้
   const [showGoogleLogin, setShowGoogleLogin] = useState(false); //เพื่อควบคุมการแสดงปุ่ม GoogleLogin
   const { windowSize } = useGlobalEvent();
@@ -32,6 +34,7 @@ const AccountSettings = () => {
   const [error, setError] = useState(null);
   const [deleteAccountModalOpen, setdeleteAccountModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = () => {
     setChecked(!checked);
@@ -120,10 +123,18 @@ const AccountSettings = () => {
   };
 
   // อัปเดทรูปภาพในฐานข้อมูล
-  const handleUpdateProfilePicture = async (imageFile) => {
+  const handleUpdateProfilePicture = async (
+    imageFile,
+    useGooglePhoto = false
+  ) => {
     try {
       const formData = new FormData();
-      formData.append("profileImage", imageFile);
+
+      if (useGooglePhoto) {
+        formData.append("profileImage", "null"); // ✅ ส่ง "null" แทน ""
+      } else if (imageFile) {
+        formData.append("profileImage", imageFile);
+      }
 
       const response = await axios.post(
         "http://localhost:5000/api/users/update-profile-picture",
@@ -134,17 +145,16 @@ const AccountSettings = () => {
         }
       );
 
-      console.log("API Response:", response.data);
-
       if (response.status === 200 && response.data.user) {
         setUserData((prev) => ({
           ...prev,
-          profileImage: `data:image/jpeg;base64,${response.data.user.profileImage}`,
+          profileImage: response.data.user.profileImage
+            ? `data:image/jpeg;base64,${response.data.user.profileImage}`
+            : null, // ✅ ตั้งค่า profileImage เป็น null ถ้าใช้ Google Photo
+          googleProfileImage: response.data.user.googleProfileImage, // ✅ คงค่า googleProfileImage เดิม
         }));
 
-        // ✅ ล้าง Preview หลังจากอัปโหลดสำเร็จ
         setPreviewImage(null);
-
         alert("Profile picture updated successfully!");
       } else {
         alert("Failed to update profile picture.");
@@ -153,6 +163,38 @@ const AccountSettings = () => {
       console.error("Error updating profile picture:", error);
       alert("An error occurred while updating the profile picture.");
     }
+  };
+
+  // ฟังก์ชันดึง Google Profile และอัปเดตโปรไฟล์
+  const handleUseGooglePhoto = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/users/getProfileGoogle",
+        { withCredentials: true }
+      );
+
+      console.log("Google Profile Image Response:", response.data);
+
+      const googleImage = response.data?.googleProfileImage;
+
+      if (googleImage) {
+        setGoogleProfileImage(googleImage); // เก็บ Google Profile Image ใน state
+        setPreviewImage(googleImage); // แสดง preview
+
+        // ✅ ส่งค่าไปอัปเดตโปรไฟล์
+        handleUpdateProfilePicture(null, true);
+      } else {
+        setError("No Google Profile Image found");
+      }
+    } catch (error) {
+      console.error("Error fetching Google profile image:", error);
+      setError("Failed to fetch Google profile image");
+    }
+
+    setLoading(false);
   };
 
   // เปลี่ยนรูปภาพ
@@ -234,49 +276,34 @@ const AccountSettings = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับการคลิกที่ลิงก์ "Use Google Photo"
-  useEffect(() => {
-    // โหลด Google API client library
-    const script = document.createElement("script");
-    script.src = "https://apis.google.com/js/api.js";
-    script.async = true;
-    script.onload = initGoogleAuth;
-    document.body.appendChild(script);
+  //ฟังก์ชันเกี่ยวกับการใช้googleเพื่่อดึงโปรไฟล์
+  const handleClick = async () => {
+    setLoading(true);
+    setError("");
 
-    function initGoogleAuth() {
-      window.gapi.load("auth2", () => {
-        window.gapi.auth2.init({
-          client_id:
-            "1054484762553-vi888hr1qncq3v3ofrradfrff67t71dl.apps.googleusercontent.com", // ใส่ clientId ของคุณที่นี่
-          scope: "https://www.googleapis.com/auth/photoslibrary.readonly", // เพิ่ม scope สำหรับ Google Photos
-        });
-      });
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/users/getProfileGoogle",
+        { withCredentials: true }
+      );
+
+      console.log("Google Profile Image Response:", response);
+      // รับค่ารูปโปรไฟล์จาก Google
+      const googleImage = response.data.googleProfileImage;
+
+      // บันทึกค่าใน state
+      if (googleImage) {
+        setGoogleProfileImage(googleImage); // เก็บรูปภาพจาก Google
+        setProfileImage(googleImage); // ถ้าต้องการใช้ Google Profile Image แทน
+      } else {
+        setError("No Google Profile Image found");
+      }
+    } catch (error) {
+      console.error("Error fetching Google profile image:", error);
+      setError("Failed to fetch Google profile image");
     }
-  }, []);
 
-  // ฟังก์ชันเปิดหน้าต่าง Google OAuth2
-  const handleClick = (e) => {
-    e.preventDefault(); // ป้องกันการรีเฟรชหน้า
-
-    const auth2 = window.gapi.auth2.getAuthInstance();
-
-    // ตรวจสอบว่า auth2 instance โหลดเสร็จแล้ว
-    if (auth2) {
-      // เรียกใช้การล็อกอิน
-      auth2
-        .signIn()
-        .then((response) => {
-          console.log("Login Success:", response);
-          // คุณสามารถดึงข้อมูลที่จำเป็นจาก response ได้ เช่น
-          // const profile = response.getBasicProfile();
-          // const idToken = response.getAuthResponse().id_token;
-        })
-        .catch((error) => {
-          console.error("Login Failed:", error);
-        });
-    } else {
-      console.error("Google API auth2 instance is not initialized.");
-    }
+    setLoading(false);
   };
 
   return (
@@ -356,16 +383,17 @@ const AccountSettings = () => {
               <img
                 id="profileImage"
                 src={
-                  previewImage || // ✅ แสดงรูปที่เลือกไว้ก่อนอัปโหลด
+                  previewImage || // ถ้ามี previewImage ให้แสดงก่อน
                   (userData?.profileImage
-                    ? `data:image/jpeg;base64,${userData.profileImage}`
-                    : "/png-clipart-computer-icons-user-user-heroes-black.png")
+                    ? `data:image/jpeg;base64,${userData.profileImage}` // ถ้ามี profileImage ให้แสดง
+                    : userData?.googleProfileImage) || // ถ้า profileImage เป็น null ให้ใช้ Google Photo
+                  "/png-clipart-computer-icons-user-user-heroes-black.png" // รูป default
                 }
                 alt="Profile"
                 style={styles.avatar}
                 onError={(e) => {
                   e.target.src =
-                    "/png-clipart-computer-icons-user-user-heroes-black.png";
+                    "/png-clipart-computer-icons-user-user-heroes-black.png"; // ถ้ารูปภาพมีปัญหาจะแสดงรูป default
                 }}
               />
             </div>
@@ -375,15 +403,17 @@ const AccountSettings = () => {
                 marginTop: isMobileView ? "0" : "80px",
               }}
             >
+              {/* ปุ่มจะถูกเปิดเมื่อผู้ใช้กด Use Google Photo */}
               <a
-                onClick={handleClick}
+                onClick={handleUseGooglePhoto}
                 style={{
-                  ...styles.photoLink,
-                  fontSize: isMobileView ? "12px" : "16px",
+                  fontSize: "16px",
+                  cursor: "pointer",
                 }}
               >
                 Use Google Photo
               </a>
+
               {/* การเปลี่ยนรูปภาพ */}
               <input
                 type="file"

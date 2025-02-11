@@ -322,18 +322,20 @@ const Navbar = () => {
                     <img
                       id="profileImage"
                       src={
-                        previewImage || // ✅ แสดงรูปที่เลือกไว้ก่อนอัปโหลด
+                        previewImage || // ✅ ถ้ามี previewImage ให้แสดงก่อน
                         (userData?.profileImage
-                          ? `data:image/jpeg;base64,${userData.profileImage}`
-                          : "/png-clipart-computer-icons-user-user-heroes-black.png")
+                          ? `data:image/jpeg;base64,${userData.profileImage}` // ✅ ใช้รูปจากฐานข้อมูลถ้ามี
+                          : userData?.googleProfileImage) || // ✅ ถ้า profileImage เป็น null ให้ใช้ Google Photo
+                        "/png-clipart-computer-icons-user-user-heroes-black.png" // ✅ ถ้าทุกอย่างเป็น null ใช้ default image
                       }
-                      alt={user?.firstName || "User"}
+                      alt={userData?.firstName || "User"} // ✅ ใช้ชื่อผู้ใช้ถ้ามี
                       className="user-avatar"
                       onError={(e) => {
                         e.target.src =
                           "/png-clipart-computer-icons-user-user-heroes-black.png"; // ✅ ถ้ารูปภาพเสีย ให้ใช้รูปดีฟอลต์
                       }}
                     />
+
                     <div className="dropdown-content">
                       <div className="dropdown-column">
                         <h4>My redfin</h4>

@@ -27,8 +27,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "https://example.com/default-profile.png", // URL ของภาพโปรไฟล์เริ่มต้น
     },
+    googleProfileImage: {
+      type: String, // URL ของภาพโปรไฟล์จาก Google
+    },
+    loginType: { type: String, enum: ["email", "google"], required: true },
     googleId: {
       type: String, // ใช้เก็บ Google ID ในกรณีที่ผู้ใช้สมัครผ่าน Google
+    },
+    googleAccessToken: {
+      type: String, // ✅ เพิ่มฟิลด์เก็บ Google Access Token
     },
     facebookId: {
       type: String, // ใช้เก็บ Facebook ID ในกรณีที่ผู้ใช้สมัครผ่าน Facebook

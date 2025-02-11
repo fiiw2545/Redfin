@@ -5,6 +5,7 @@ const { sendEmail } = require("../Controllers/TestEmail");
 const crypto = require("crypto"); // ใช้สำหรับสร้าง token ตั้งรหัสผ่านใหม่
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const axios = require("axios");
 
 // ฟังก์ชันสมัครสมาชิกพร้อมยืนยันอีเมล
 const registerUser = async (req, res) => {
@@ -24,6 +25,7 @@ const registerUser = async (req, res) => {
       email,
       profileImage: profileImage || undefined, // ใช้ค่าเริ่มต้นหากไม่มี profileImage
       isVerified: false,
+      loginType: "email",
     });
     await newUser.save();
 
@@ -82,6 +84,7 @@ const register2User = async (req, res) => {
       email,
       profileImage: profileImage || undefined,
       isVerified: false,
+      loginType: "email",
     });
     await newUser.save();
 
@@ -332,12 +335,14 @@ const googleLogin = async (req, res) => {
         firstName: firstName,
         lastName,
         profileImage: picture,
-        isVerified: false, // ตั้งค่า isVerified เป็น true
+        googleProfileImage: picture,
+        loginType: "google",
+        googleAccessToken: token, // ✅ เพิ่ม Google Access Token ที่ได้จาก OAuth
       });
     } else {
-      // หากผู้ใช้อยู่แล้ว ให้มั่นใจว่า isVerified เป็น true
-      user.isVerified = true;
-      await user.save(); // บันทึกการเปลี่ยนแปลง
+      user.googleAccessToken = token;
+      user.googleProfileImage = picture;
+      await user.save();
     }
 
     // สร้าง JWT Token
@@ -363,12 +368,51 @@ const googleLogin = async (req, res) => {
         email: user.email,
         profileImage: user.profileImage,
         isVerified: user.isVerified,
+        googleProfileImage: user.googleProfileImage,
       },
     });
   } catch (error) {
     res
       .status(400)
       .json({ message: "Google login failed!", error: error.message });
+  }
+};
+
+//ดึงรูปภาพgoogle
+const getUserProfileGoogle = async (req, res) => {
+  try {
+    // ✅ ตรวจสอบว่า token มีใน cookies หรือไม่
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ✅ ตรวจสอบ token และดึง userId จาก token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // ✅ ดึงข้อมูลผู้ใช้จากฐานข้อมูล
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    const googleProfileImage = user.googleProfileImage;
+    console.log("Google Profile Image:", googleProfileImage);
+
+    res.status(200).json({
+      email: user.email,
+      fullName: `${user.firstName} ${user.lastName}`,
+      profileImage: user.profileImage,
+      googleProfileImage, // ✅ ส่ง googleProfileImage กลับไป
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -491,6 +535,7 @@ const getinformation = async (req, res) => {
       lastName: user.lastName,
       email: user.email,
       profileImage: user.profileImage,
+      googleProfileImage: user.googleProfileImage,
     });
   } catch (error) {
     console.error("Error in getInformation:", error); // Debug
@@ -532,23 +577,23 @@ const updateProfilePicture = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Missing profileImage" });
-    }
+    const googleProfileImage = req.body.googleProfileImage;
+    let profileImage = req.file ? req.file.buffer.toString("base64") : null;
 
-    const profileImage = req.file.buffer.toString("base64");
+    // ✅ ถ้าใช้ Google Photo, ให้ profileImage เป็น null
+    if (req.body.profileImage === "null") {
+      profileImage = null;
+    }
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { profileImage },
+      { profileImage, googleProfileImage },
       { new: true }
     );
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    console.log("Updated User Data:", user); // ✅ เพิ่ม Log
 
     return res.status(200).json({
       message: "Profile picture updated successfully",
@@ -860,6 +905,42 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+// ตรวจสอบประเภทการล็อกอิน
+const checkLoginType = async (req, res) => {
+  try {
+    // 🔍 ดึง Token จาก Cookie
+    const token = req.cookies?.token;
+    console.log("Token from Cookie:", token);
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Access denied, no token provided." });
+    }
+
+    let decoded;
+    try {
+      // 🔍 ตรวจสอบความถูกต้องของ Token
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Decoded Token:", decoded);
+    } catch (err) {
+      return res.status(403).json({ message: "Invalid or expired token." });
+    }
+
+    // 🔍 ดึงข้อมูล User จาก Database
+    const user = await User.findById(decoded.id).select("loginType");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔥 ส่งประเภทการล็อกอินกลับไป
+    res.json({ loginType: user.loginType });
+  } catch (error) {
+    console.error("Error checking login type:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
@@ -884,4 +965,6 @@ module.exports = {
   verifyOTP,
   passwordLogin,
   deleteAccount,
+  checkLoginType,
+  getUserProfileGoogle,
 };

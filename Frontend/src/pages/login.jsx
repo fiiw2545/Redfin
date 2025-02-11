@@ -25,6 +25,8 @@ const LoginPage = () => {
         { withCredentials: true }
       );
 
+      console.log("✅ Server Response:", res.data);
+
       if (res.status === 200) {
         localStorage.setItem(
           "user",
@@ -32,6 +34,7 @@ const LoginPage = () => {
             name: res.data.user.fullName,
             email: res.data.user.email,
             profileImage: res.data.user.profileImage || null,
+            loginType: "google",
           })
         );
 
