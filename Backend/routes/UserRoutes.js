@@ -29,6 +29,7 @@ const {
   removeProfilePicture,
   updateProfile,
   checkLoginType,
+  checkVerify,
   getUserProfileGoogle,
 } = require("../Controllers/UserControllers"); // Import Controllers
 const { authenticateToken } = require("../middleware/UserMiddleware");
@@ -67,5 +68,6 @@ router.get("/get-google-client-id", (req, res) => {
 }); // เส้นทางเพื่อดึง GOOGLE_CLIENT_ID
 
 router.get("/getProfileGoogle", getUserProfileGoogle); //ดึงรูปภาพgoogleจากฐานข้อมูล
+router.get("/checkVerify", checkVerify); //เช็คว่าผู้ใช้นั้นมีการVerifyหรือยัง
 
 module.exports = router;

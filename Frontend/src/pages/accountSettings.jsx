@@ -18,6 +18,7 @@ const AccountSettings = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [email, setEmail] = useState("");
   const [googleProfileImage, setGoogleProfileImage] = useState(""); // รูป Google เท่านั้น
+  const [useGooglePhoto, setUseGooglePhoto] = useState(false);
   const [profileImage, setProfileImage] = useState("");
   const [loading, setLoading] = useState(false); // ✅ ใช้เพื่อแสดงสถานะโหลด
   const [userData, setUserData] = useState(null); // ตัวแปรสำหรับเก็บข้อมูลผู้ใช้
@@ -27,7 +28,7 @@ const AccountSettings = () => {
   const [searchPartnerModalOpen, setsearchPartnerModalOpen] = useState(false);
   const [isFacebookLinked, setIsFacebookLinked] = useState(false);
   const [isGoogleLinked, setIsGoogleLinked] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(null);
   const [isPreApproved, setIsPreApproved] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -305,6 +306,24 @@ const AccountSettings = () => {
 
     setLoading(false);
   };
+
+  //เช็คว่าVerifyหรือยัง
+  const fetchVerificationStatus = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/users/checkVerify", {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await res.json();
+      setIsVerified(data.isVerified);
+    } catch (error) {
+      console.error("Error fetching verification status", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchVerificationStatus();
+  }, []);
 
   return (
     <>

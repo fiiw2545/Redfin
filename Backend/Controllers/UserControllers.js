@@ -941,6 +941,43 @@ const checkLoginType = async (req, res) => {
   }
 };
 
+//เช็คว่าVerifyไหม
+const checkVerify = async (req, res) => {
+  try {
+    // 🔍 ดึง Token จาก Cookie
+    const token = req.cookies?.token;
+    console.log("Token from Cookie:", token);
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Access denied, no token provided." });
+    }
+
+    let decoded;
+    try {
+      // 🔍 ตรวจสอบความถูกต้องของ Token
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Decoded Token:", decoded);
+    } catch (err) {
+      return res.status(403).json({ message: "Invalid or expired token." });
+    }
+
+    // 🔍 ค้นหาผู้ใช้ในฐานข้อมูลตาม `decoded.id`
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // ✅ ส่งค่า `isVerified` กลับไป
+    return res.json({ isVerified: user.isVerified });
+  } catch (error) {
+    console.error("Error checking verification:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
@@ -967,4 +1004,5 @@ module.exports = {
   deleteAccount,
   checkLoginType,
   getUserProfileGoogle,
+  checkVerify,
 };
