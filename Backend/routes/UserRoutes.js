@@ -25,11 +25,13 @@ const {
   getinformation,
   getUser,
   checkEmail,
+  checkBanner,
   updateProfilePicture,
   removeProfilePicture,
   updateProfile,
   checkLoginType,
   checkVerify,
+  updateBannerStatus,
   getUserProfileGoogle,
 } = require("../Controllers/UserControllers"); // Import Controllers
 const { authenticateToken } = require("../middleware/UserMiddleware");
@@ -69,5 +71,7 @@ router.get("/get-google-client-id", (req, res) => {
 
 router.get("/getProfileGoogle", getUserProfileGoogle); //ดึงรูปภาพgoogleจากฐานข้อมูล
 router.get("/checkVerify", checkVerify); //เช็คว่าผู้ใช้นั้นมีการVerifyหรือยัง
+router.get("/checkBanner", checkBanner); //เช็คว่าผู้ใช้นั้นมีการดูแบรนเนอร์หรือยัง
+router.post("/updateBannerStatus", updateBannerStatus); //อัพเดทสถานะการดูแบรนเนอร์
 
 module.exports = router;

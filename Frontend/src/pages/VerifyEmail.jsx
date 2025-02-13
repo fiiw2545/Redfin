@@ -18,7 +18,7 @@ const VerifyEmail = () => {
 
         if (response.status === 200) {
           setMessage("✅ Email verified successfully! Redirecting...");
-          setTimeout(() => navigate("/login"), 3000);
+          setTimeout(() => navigate("/"), 3000);
         }
       } catch (error) {
         setMessage("❌ Verification failed. Please try again.");

@@ -1,5 +1,6 @@
-// src/pages/HomePage.jsx
 import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 import SearchTabs from "../components/SearchTabs/SearchTabs";
@@ -12,30 +13,72 @@ import { useGlobalEvent } from "../context/GlobalEventContext";
 const HomePage = () => {
   const { windowSize } = useGlobalEvent();
   const isMobileView = windowSize.width < 670;
-
-  const isVerifiedEmail = true; // จะต้องรับค่ามาอีกทีว่า verify อีเมลล์หรือยัง
   const [visible, setVisible] = useState(false);
+  const location = useLocation();
 
-  useEffect(() => {
-    // ตรวจสอบว่าผู้ใช้เคยเห็นยัง
-    const hasSeenBanner =
-      localStorage.getItem("hasSeenVerifiedBanner") === "true";
+  // ดึงค่า verifyToken จาก URL query
+  const params = new URLSearchParams(location.search);
+  const verifyToken = params.get("verifyToken");
 
-    // ถ้าอีเมลล์เคย verify แล้วและยังไม่เคยเห็นแบนเนอร์ ให้แสดงแบนเนอร์
-    if (isVerifiedEmail && !hasSeenBanner) {
-      setVisible(true);
+  // ฟังก์ชัน Verify Email
+  const verifyEmail = async (token) => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/users/verify-email",
+        { verifyToken: token },
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.error("Verification failed:", error);
     }
-  }, []);
-
-  // เมื่อกด OK ให้ซ่อนแบนเนอร์และบันทึกค่าใน localStorage
-  const handleCloseBanner = () => {
-    setVisible(false);
-    localStorage.setItem("hasSeenVerifiedBanner", "true");
   };
+
+  // ฟังก์ชันเช็คสถานะจากฐานข้อมูลและกำหนดการแสดงแบนเนอร์
+  const checkBannerVisibility = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/users/checkBanner",
+        { withCredentials: true }
+      );
+
+      console.log("API checkBannerStatus response:", response.data);
+
+      if (!response.data.hasSeenBanner) {
+        console.log("✅ User has NOT seen the banner, setting visible to TRUE");
+        setVisible(true); // แสดงแบนเนอร์
+      } else {
+        console.log("❌ User HAS seen the banner, keeping it hidden");
+      }
+    } catch (error) {
+      console.error("Error fetching banner status", error);
+    }
+  };
+
+  // ตรวจสอบ verifyToken และสถานะการแสดงแบนเนอร์
+  useEffect(() => {
+    if (verifyToken) {
+      verifyEmail(verifyToken);
+    }
+    checkBannerVisibility();
+  }, [verifyToken]);
+
+  // เมื่อกดปิดแบนเนอร์
+  const handleCloseBanner = async () => {
+    setVisible(false);
+    try {
+      await axios.post(
+        "http://localhost:5000/api/users/updateBannerStatus",
+        {},
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.error("Error updating banner status", error);
+    }
+  };
+
   return (
     <>
       <Navbar />
-
       <div style={styles.container}>
         {visible && (
           <div
@@ -60,7 +103,7 @@ const HomePage = () => {
               />
               <div style={styles.textContainer}>
                 <h2 style={styles.title}>
-                  You’re in! We’ve verified your email.
+                  🎉 You’re in! We’ve verified your email.
                 </h2>
                 <p style={styles.description}>
                   Now you can save searches, share lists of homes you love with
@@ -160,16 +203,16 @@ const styles = {
     background: "none",
     border: "1px solid #333333",
     padding: "12px 24px",
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#333333",
+    borderRadius: "3px",
     cursor: "pointer",
-    borderRadius: "4px",
-    transition: "background 0.2s",
-    fontWeight: "bold",
-    fontFamily:
-      '"Libre Franklin", -apple-system, BlinkMacSystemFont, Roboto, "Droid Sans", Helvetica, Arial, sans-serif',
-    whiteSpace: "nowrap",
+    marginLeft: "auto",
+    marginRight: "20px",
   },
   buttonMobile: {
-    marginTop: "10px",
+    marginTop: "12px",
     width: "100%",
   },
 };

@@ -246,7 +246,7 @@ const resendEmail = async (req, res) => {
     await user.save();
 
     // สร้างลิงก์ยืนยันอีเมล
-    const verifyLink = `${process.env.CLIENT_URL}/verify-email/${verifyToken}`;
+    const verifyLink = `${process.env.CLIENT_URL}/?verifyToken=${verifyToken}`;
 
     // ใช้ `sendEmail` ที่เราสร้างไว้
     await sendEmail(
@@ -978,6 +978,71 @@ const checkVerify = async (req, res) => {
   }
 };
 
+// ฟังก์ชันอัปเดตสถานะการเห็นแบนเนอร์
+const updateBannerStatus = async (req, res) => {
+  try {
+    // ดึง token จาก Cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ตรวจสอบ token และดึง userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // ค้นหาผู้ใช้จาก userId
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // อัปเดตค่า isVerified เป็น true
+    user.hasSeenBanner = true;
+    await user.save();
+
+    return res.json({
+      message: "Banner status updated successfully.",
+      hasSeenBanner: user.hasSeenBanner,
+    });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while verifying the email." });
+  }
+};
+
+// ฟังก์ชันเช็คแบนเนอร์
+const checkBanner = async (req, res) => {
+  try {
+    // ดึง token จาก Cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(403).json({ message: "No token provided!" });
+    }
+
+    // ตรวจสอบ token และดึง userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // ค้นหาผู้ใช้จาก userId
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.json({
+      hasSeenBanner: user.hasSeenBanner,
+    });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while verifying the email." });
+  }
+};
+
 // ส่งออกโมดูล
 module.exports = {
   registerUser,
@@ -1005,4 +1070,6 @@ module.exports = {
   checkLoginType,
   getUserProfileGoogle,
   checkVerify,
+  checkBanner,
+  updateBannerStatus,
 };

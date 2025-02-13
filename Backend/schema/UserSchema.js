@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema(
       type: String, // URL ของภาพโปรไฟล์จาก Google
     },
     loginType: { type: String, enum: ["email", "google"], required: true },
+    hasSeenBanner: {
+      type: Boolean,
+      default: false, // ค่าเริ่มต้นคือ false หมายความว่ายังไม่เคยดูแบนเนอร์
+    },
     googleId: {
       type: String, // ใช้เก็บ Google ID ในกรณีที่ผู้ใช้สมัครผ่าน Google
     },
