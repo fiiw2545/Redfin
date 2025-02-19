@@ -30,7 +30,9 @@ const userSchema = new mongoose.Schema(
     googleProfileImage: {
       type: String, // URL ของภาพโปรไฟล์จาก Google
     },
+    useGooglePhoto: Boolean,
     loginType: { type: String, enum: ["email", "google"], required: true },
+    isRemoved: { type: Boolean, default: false },
     hasSeenBanner: {
       type: Boolean,
       default: false, // ค่าเริ่มต้นคือ false หมายความว่ายังไม่เคยดูแบนเนอร์

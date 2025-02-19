@@ -61,7 +61,7 @@ router.post(
   upload.single("profileImage"), // ใช้มิดเดิลแวร์นี้เพื่อจัดการกับการอัปโหลดไฟล์
   updateProfilePicture
 ); // Route สำหรับอัปเดตรูปภาพ
-router.put("/update-profile-picture", removeProfilePicture); //ลบรูปภาพ
+router.put("/remove-profile-picture", removeProfilePicture); //ลบรูปภาพ
 router.put("/update-profile", updateProfile); //อัพเดทในฐานข้อมูล
 router.get("/check-login-type", checkLoginType); //ตรวจสอบประเภทการล็อคอิน
 

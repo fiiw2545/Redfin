@@ -381,7 +381,7 @@ const googleLogin = async (req, res) => {
 //ดึงรูปภาพgoogle
 const getUserProfileGoogle = async (req, res) => {
   try {
-    // ✅ ตรวจสอบว่า token มีใน cookies หรือไม่
+    // ✅ ตรวจสอบ token
     const token = req.cookies.token;
     if (!token) {
       return res.status(403).json({ message: "No token provided!" });
@@ -396,7 +396,7 @@ const getUserProfileGoogle = async (req, res) => {
     }
 
     // ✅ ดึงข้อมูลผู้ใช้จากฐานข้อมูล
-    const user = await User.findById(userId);
+    let user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
@@ -405,11 +405,21 @@ const getUserProfileGoogle = async (req, res) => {
     const googleProfileImage = user.googleProfileImage;
     console.log("Google Profile Image:", googleProfileImage);
 
+    // ✅ อัปเดต isRemoved เป็น false หากใช้ Google Profile
+    if (googleProfileImage) {
+      user = await User.findByIdAndUpdate(
+        userId,
+        { isRemoved: false }, // ✅ บังคับให้ isRemoved เป็น false
+        { new: true }
+      );
+    }
+
     res.status(200).json({
       email: user.email,
       fullName: `${user.firstName} ${user.lastName}`,
       profileImage: user.profileImage,
-      googleProfileImage, // ✅ ส่ง googleProfileImage กลับไป
+      googleProfileImage: user.googleProfileImage,
+      isRemoved: user.isRemoved, // ✅ ส่งค่าที่อัปเดตแล้วไปด้วย
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -536,6 +546,8 @@ const getinformation = async (req, res) => {
       email: user.email,
       profileImage: user.profileImage,
       googleProfileImage: user.googleProfileImage,
+      isRemoved: user.isRemoved,
+      useGooglePhoto: user.useGooglePhoto,
     });
   } catch (error) {
     console.error("Error in getInformation:", error); // Debug
@@ -577,55 +589,80 @@ const updateProfilePicture = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    const googleProfileImage = req.body.googleProfileImage;
-    let profileImage = req.file ? req.file.buffer.toString("base64") : null;
+    const { useGooglePhoto, googleProfileImage } = req.body;
 
-    // ✅ ถ้าใช้ Google Photo, ให้ profileImage เป็น null
-    if (req.body.profileImage === "null") {
-      profileImage = null;
+    // เพิ่ม console.log เพื่อตรวจสอบข้อมูลที่ได้รับ
+    console.log("Received request body:", {
+      useGooglePhoto,
+      googleProfileImage,
+    });
+
+    let updateData = {};
+
+    if (useGooglePhoto === "true") {
+      updateData = {
+        profileImage: null,
+        isRemoved: false,
+        useGooglePhoto: true,
+        googleProfileImage,
+      };
+      // เพิ่ม console.log เพื่อตรวจสอบข้อมูลที่จะอัปเดต
+      console.log("Updating with Google photo:", updateData);
+    } else if (req.file) {
+      updateData = {
+        profileImage: req.file.buffer.toString("base64"),
+        isRemoved: false,
+        useGooglePhoto: false,
+      };
+      console.log("Updating with uploaded photo");
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { profileImage, googleProfileImage },
-      { new: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
 
-    if (!user) {
+    // เพิ่ม console.log เพื่อตรวจสอบผลลัพธ์
+    console.log("Updated user:", {
+      useGooglePhoto: updatedUser.useGooglePhoto,
+      googleProfileImage: updatedUser.googleProfileImage,
+    });
+
+    if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Profile picture updated successfully",
-      user,
+      user: {
+        ...updatedUser._doc,
+        googleProfileImage: updatedUser.googleProfileImage,
+        useGooglePhoto: updatedUser.useGooglePhoto,
+      },
     });
   } catch (error) {
     console.error("Error updating profile picture:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error updating profile picture" });
   }
 };
 
 //ลบรูปภาพ
 const removeProfilePicture = async (req, res) => {
   try {
-    // ✅ ตรวจสอบว่า token มีใน cookies หรือไม่
     const token = req.cookies.token;
     if (!token) {
       return res.status(403).json({ message: "No token provided!" });
     }
 
-    // ✅ ตรวจสอบ token และดึง userId จาก token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    // ✅ อัปเดตฐานข้อมูล (ลบรูปภาพ)
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profileImage: null }, // ✅ ตั้งค่า profileImage เป็น `null`
+      {
+        profileImage: null,
+        isRemoved: true,
+        useGooglePhoto: false, // ปิดการใช้ Google Photo
+      },
       { new: true }
     );
 
@@ -633,9 +670,15 @@ const removeProfilePicture = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    console.log("Updated user after removing profile:", updatedUser); // ตรวจสอบค่าใน log
+
     res.status(200).json({
       message: "Profile picture removed successfully",
-      user: updatedUser,
+      user: {
+        ...updatedUser._doc,
+        googleProfileImage: updatedUser.googleProfileImage, // คงค่า googleProfileImage
+        useGooglePhoto: false,
+      },
     });
   } catch (error) {
     console.error("Error removing profile picture:", error);
@@ -646,33 +689,40 @@ const removeProfilePicture = async (req, res) => {
 //อัพเดทข้อมูลของผู้ใช้
 const updateProfile = async (req, res) => {
   try {
-    // ✅ ตรวจสอบ token จาก cookies
     const token = req.cookies.token;
     if (!token) {
       return res.status(403).json({ message: "No token provided!" });
     }
 
-    // ✅ ถอดรหัส token เพื่อดึง userId
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    const {
+      firstName,
+      lastName,
+      email,
+      isRemoved,
+      useGooglePhoto,
+      googleProfileImage,
+    } = req.body;
 
-    // ✅ ดึงข้อมูลจาก body ของ request
-    const { firstName, lastName, email } = req.body;
+    console.log("Received update data:", req.body); // เพิ่ม log
 
-    // ✅ ตรวจสอบว่ามีข้อมูลอะไรที่ต้องอัปเดตบ้าง
-    const updateData = {};
-    if (firstName) updateData.firstName = firstName;
-    if (lastName) updateData.lastName = lastName;
-    if (email) updateData.email = email;
+    // อัปเดตข้อมูลทั้งหมด
+    const updateData = {
+      firstName,
+      lastName,
+      email,
+      isRemoved,
+      useGooglePhoto,
+      googleProfileImage,
+    };
 
-    // ✅ อัปเดตข้อมูลผู้ใช้ในฐานข้อมูล
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     });
+
+    console.log("Updated user:", updatedUser); // เพิ่ม log
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -680,7 +730,12 @@ const updateProfile = async (req, res) => {
 
     res.status(200).json({
       message: "Profile updated successfully",
-      user: updatedUser, // ✅ ส่งข้อมูลที่อัปเดตแล้วกลับไป
+      user: {
+        ...updatedUser._doc,
+        useGooglePhoto: updatedUser.useGooglePhoto,
+        googleProfileImage: updatedUser.googleProfileImage,
+        isRemoved: updatedUser.isRemoved,
+      },
     });
   } catch (error) {
     console.error("Error updating profile:", error);
