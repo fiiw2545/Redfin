@@ -80,7 +80,6 @@ const AccountSettings = () => {
       setIsLoading(false); // หยุดสถานะการโหลด
     }
   };
-  `http://localhost:5000/api/users/information/${email}`;
 
   // ฟังก์ชันดึงข้อมูลผู้ใช้
   useEffect(() => {

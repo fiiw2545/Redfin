@@ -57,14 +57,41 @@ const Navbar = () => {
           { withCredentials: true }
         );
 
-        setUserData(response.data); // ใช้ setUserData ที่นี่
+        setUserData(response.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
 
-    fetchUserData(); // เรียกใช้ฟังก์ชันนี้เมื่อ component mount
-  }, []); // ค่าที่อยู่ใน array จะบอกว่าเมื่อไรฟังก์ชันนี้จะถูกเรียกใช้ใหม่
+    // เรียกใช้ฟังก์ชันเมื่อผู้ใช้ล็อกอินแล้ว
+    if (isLoggedIn) {
+      fetchUserData();
+    }
+  }, [isLoggedIn]); // เพิ่ม isLoggedIn เป็น dependency
+
+  // เพิ่มฟังก์ชันสำหรับอัพเดทข้อมูลผู้ใช้
+  const updateUserData = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/users/information",
+        { withCredentials: true }
+      );
+      setUserData(response.data);
+    } catch (error) {
+      console.error("Error updating user data:", error);
+    }
+  };
+
+  // เพิ่ม useEffect สำหรับตรวจสอบการเปลี่ยนแปลงของรูปภาพ
+  useEffect(() => {
+    // สร้าง event listener สำหรับการอัพเดทรูปภาพ
+    window.addEventListener("profileImageUpdated", updateUserData);
+
+    return () => {
+      // cleanup event listener
+      window.removeEventListener("profileImageUpdated", updateUserData);
+    };
+  }, []);
 
   // ฟังก์ชันออกจากระบบ
   const handleSignOut = async () => {
@@ -322,17 +349,19 @@ const Navbar = () => {
                     <img
                       id="profileImage"
                       src={
-                        previewImage || // ✅ ถ้ามี previewImage ให้แสดงก่อน
-                        (userData?.profileImage
-                          ? `data:image/jpeg;base64,${userData.profileImage}` // ✅ ใช้รูปจากฐานข้อมูลถ้ามี
-                          : userData?.googleProfileImage) || // ✅ ถ้า profileImage เป็น null ให้ใช้ Google Photo
-                        "/png-clipart-computer-icons-user-user-heroes-black.png" // ✅ ถ้าทุกอย่างเป็น null ใช้ default image
+                        userData?.isRemoved
+                          ? "/png-clipart-computer-icons-user-user-heroes-black.png"
+                          : previewImage ||
+                            (userData?.profileImage
+                              ? `data:image/jpeg;base64,${userData.profileImage}`
+                              : userData?.googleProfileImage) ||
+                            "/png-clipart-computer-icons-user-user-heroes-black.png"
                       }
-                      alt={userData?.firstName || "User"} // ✅ ใช้ชื่อผู้ใช้ถ้ามี
+                      alt={userData?.firstName || "User"}
                       className="user-avatar"
                       onError={(e) => {
                         e.target.src =
-                          "/png-clipart-computer-icons-user-user-heroes-black.png"; // ✅ ถ้ารูปภาพเสีย ให้ใช้รูปดีฟอลต์
+                          "/png-clipart-computer-icons-user-user-heroes-black.png";
                       }}
                     />
 
