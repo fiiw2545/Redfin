@@ -352,10 +352,12 @@ const Navbar = () => {
                         userData?.isRemoved
                           ? "/png-clipart-computer-icons-user-user-heroes-black.png"
                           : previewImage ||
-                            (userData?.profileImage
+                            (userData?.useGooglePhoto &&
+                            userData?.googleProfileImage
+                              ? userData?.googleProfileImage
+                              : userData?.profileImage
                               ? `data:image/jpeg;base64,${userData.profileImage}`
-                              : userData?.googleProfileImage) ||
-                            "/png-clipart-computer-icons-user-user-heroes-black.png"
+                              : "/png-clipart-computer-icons-user-user-heroes-black.png")
                       }
                       alt={userData?.firstName || "User"}
                       className="user-avatar"
