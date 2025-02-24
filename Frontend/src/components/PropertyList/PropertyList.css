@@ -1,0 +1,158 @@
+/* ✅ ปรับโครงสร้างการแสดงผลของการ์ด */
+.property-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* ปรับขนาดการ์ดให้เต็มพื้นที่ */
+  gap: 40px;
+  justify-content: center;
+  /* จัดให้อยู่ตรงกลาง */
+  padding: 10px;
+  width: 100%;
+  max-width: 90vw;
+  margin: 0 auto 20px;
+}
+
+/* ปรับให้ข้อความของ pagination อยู่ตรงกลาง */
+.pagination-info {
+  font-size: 14px;
+  margin-bottom: 10px;
+  text-align: center; /* จัดข้อความให้อยู่กลาง */
+  width: 100%; /* ให้แน่ใจว่าใช้พื้นที่เต็มแถวนั้น */
+  color: #333; /* สีข้อความ */
+}
+
+.download-link {
+  color: #00828c;
+  text-decoration: none;
+}
+
+.download-link:hover {
+  text-decoration: underline;
+}
+
+/* ปรับโครงสร้าง Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ปรับพื้นที่ให้ลูกศรเท่ากับตัวเลข */
+.pagination-button-wrapper {
+  width: 50px; /* ขยายพื้นที่ของลูกศร */
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* จัดตัวเลขให้อยู่ตรงกลาง */
+.pagination-numbers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ปรับปุ่มตัวเลข */
+.pagination-button {
+  border: none;
+  background-color: transparent;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 5px 10px;
+  width: 50px; /* ขยายขนาดปุ่มตัวเลข */
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px; /* เพิ่มมุมมน */
+}
+
+.pagination-number {
+  border: none;
+  background-color: transparent;
+  font-size: 14px;
+  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto,
+    Droid Sans, Helvetica, Arial, sans-serif;
+  color: #00828c;
+  cursor: pointer;
+  padding: 5px 10px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-number.active {
+  background-color: #ddd;
+  border-radius: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* ขยายขนาดลูกศร */
+.pagination-icon {
+  width: 50px; /* ขยายขนาดลูกศร */
+  height: 50px;
+  fill: #00828c;
+  cursor: pointer;
+}
+
+/* ปุ่มลูกศรเมื่อถูกกด */
+.pagination-button:disabled {
+  color: #bbb;
+  cursor: not-allowed;
+}
+
+/* ปรับ Breadcrumb */
+.breadcrumb {
+  display: flex;
+  justify-content: center; /* จัดเรียงทุกอย่างในแนวนอน */
+  align-items: center; /* จัดให้ทุกอย่างอยู่กลางในแนวตั้ง */
+  font-size: 14px;
+  gap: 8px;
+  color: #00828c;
+  font-family: Libre Franklin, -apple-system, BlinkMacSystemFont, Roboto,
+    Droid Sans, Helvetica, Arial, sans-serif;
+}
+
+/* ลิงค์ใน breadcrumb */
+.breadcrumb a {
+  color: #00828c;
+  text-decoration: none;
+}
+
+/* เพิ่มการเปลี่ยนแปลงสีเมื่อ hover */
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* ปรับขนาดลูกศรและให้ตรงกลาง */
+.breadcrumb-icon {
+  width: 24px;
+  height: 24px;
+  fill: #00828c;
+  transform: rotate(180deg);
+  display: inline-block;
+  margin-top: 2px;
+}
+
+/* ✅ ปรับให้แสดงการ์ดทีละใบเมื่อหน้าจอเล็กกว่า 734px */
+@media (max-width: 734px) {
+  .property-grid {
+    display: flex;
+    flex-direction: column;
+    /* จัดเรียงแนวตั้ง */
+    align-items: center;
+    /* จัดให้อยู่กึ่งกลาง */
+  }
+
+  .property-card {
+    width: 100%;
+    /* ให้การ์ดเต็มความกว้างของ container */
+    max-width: 500px;
+    /* จำกัดขนาดการ์ดไม่ให้ใหญ่เกินไป */
+  }
+}

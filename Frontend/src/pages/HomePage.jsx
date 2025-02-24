@@ -3,12 +3,10 @@ import axios from "axios";
 import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
-import SearchTabs from "../components/SearchTabs/SearchTabs";
 import ServicesSection from "../components/ServicesSection/ServicesSection";
 import SearchLinksSection from "../components/SearchLinksSection/SearchLinksSection";
-import ContactForm from "../components/ContactForm/ContactForm";
-import AppSection from "../components/AppSection/AppSection";
 import { useGlobalEvent } from "../context/GlobalEventContext";
+import "./styles/HomePage.css";
 
 const HomePage = () => {
   const { windowSize } = useGlobalEvent();
@@ -124,13 +122,161 @@ const HomePage = () => {
         )}
       </div>
 
-      <SearchTabs />
+      <SearchTab />
       <ServicesSection />
       <AppSection />
       <ContactForm />
       <SearchLinksSection />
       <Footer />
     </>
+  );
+};
+
+// SearchTab
+const SearchTab = () => {
+  return (
+    <div className="search-tab">
+      <div className="overlay">
+        <h1 className="hero-title">
+          Find the right home <br /> at the right price
+        </h1>
+        <div className="tabs">
+          <a href="#" className="tab active">
+            Buy
+          </a>
+          <a href="#" className="tab">
+            Rent
+          </a>
+          <a href="#" className="tab">
+            Sell
+          </a>
+          <a href="#" className="tab">
+            Mortgage
+          </a>
+          <a href="#" className="tab">
+            Home Estimate
+          </a>
+        </div>
+        <div className="search-bar">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="City, Address, School, Agent, ZIP"
+          />
+          <button className="search-button">
+            <svg
+              className="search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M23.884 21.763l-7.554-7.554a8.976 8.976 0 001.526-6.835C17.203 3.68 14.204.72 10.502.122a9.01 9.01 0 00-10.38 10.38c.598 3.702 3.558 6.7 7.252 7.354a8.976 8.976 0 006.835-1.526l7.554 7.554a.25.25 0 00.353 0l1.768-1.768a.25.25 0 000-.353zM2 9c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7-7-3.14-7-7z"
+                fill="#ffffff"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// AppSection
+const AppSection = () => {
+  return (
+    <div className="app-section">
+      <div className="app-download">
+        <div className="app-download-content">
+          <h2>Get the Redfin app</h2>
+          <p>
+            Download our top-rated real estate app for iOS or Android to get
+            alerts when your dream home hits the market.
+          </p>
+        </div>
+        <div className="qr-content">
+          <img
+            src="https://ssl.cdn-redfin.com/v561.1.0/images/homepage/banners/download.jpg"
+            alt="QR code to download the app"
+            className="qr-code"
+          />
+        </div>
+      </div>
+
+      <div className="tour-section">
+        <div className="tour-image">
+          <img
+            src="https://ssl.cdn-redfin.com/cop-assets/prod/hpwidget/tour_updated.jpg"
+            alt="People touring a house"
+          />
+        </div>
+        <div className="tour-content">
+          <h2>Start touring homes, no strings attached</h2>
+          <p>
+            Unlike many other agents, Redfin agents won’t ask you to sign an
+            exclusive commitment before they’ll take you on a first tour.
+          </p>
+          <button className="search-button">Search for homes</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ContactForm
+const ContactForm = () => {
+  return (
+    <div className="contact-form-container">
+      <div className="form-header">
+        <h2>Talk to a Redfin agent</h2>
+        <p>
+          You’ll be connected with an expert local agent—there’s no pressure or
+          obligation.
+        </p>
+      </div>
+      <form className="contact-form">
+        <div className="contact-form-group">
+          <label htmlFor="location">Where are you searching for homes? *</label>
+          <div className="contact-search-box">
+            <input
+              type="text"
+              id="location"
+              placeholder="City, Address, ZIP"
+              required
+            />
+            <button type="button" className="contact-search-button"></button>
+          </div>
+        </div>
+        <div className="contact-form-group">
+          <label htmlFor="email">Email *</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="redfin@redfin.com"
+            required
+          />
+        </div>
+        <div className="contact-form-group">
+          <label htmlFor="phone">Phone *</label>
+          <input type="tel" id="phone" placeholder="( ) -" required />
+        </div>
+        <div className="contact-form-group">
+          <label htmlFor="message">What can we help you with? *</label>
+          <textarea
+            id="message"
+            placeholder="I'm interested in buying, selling or a free consult with a Redfin agent."
+            required
+          ></textarea>
+        </div>
+        <button type="submit" className="contact-submit-button">
+          Submit
+        </button>
+        <p className="contact-form-footer">
+          You are creating a Redfin account and agree to our{" "}
+          <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a>.
+        </p>
+      </form>
+    </div>
   );
 };
 
