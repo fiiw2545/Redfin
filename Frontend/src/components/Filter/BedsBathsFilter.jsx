@@ -1,102 +1,338 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-const ViewOption = ({ onSelect }) => {
-  const [selected, setSelected] = useState(
-    localStorage.getItem("viewOption") || "List"
-  ); // ดึงค่าจาก localStorage ถ้ามี
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
-  const [hoveredButton, setHoveredButton] = useState(null);
+const BedsBathsFilter = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedBeds, setSelectedBeds] = useState(["Any"]);
+  const [selectedBath, setSelectedBath] = useState("Any");
+  const [isHoveredBeds, setIsHoveredBeds] = useState(null);
+  const [isHoveredBaths, setIsHoveredBaths] = useState(null);
+  const [isDropdownHovered, setIsDropdownHovered] = useState(false);
+  const [isResetHovered, setIsResetHovered] = useState(false);
+  const [isDoneHovered, setIsDoneHovered] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const bedOptions = ["Any", "Studio", "1", "2", "3", "4", "5+"];
 
   useEffect(() => {
-    const handleResize = () => setIsMobileView(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
-  const icons = {
-    List: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-        <path d="M9 4H4v5h5V4zM4 2a2 2 0 00-2 2v5a2 2 0 002 2h5a2 2 0 002-2V4a2 2 0 00-2-2H4zM20 4h-5v5h5V4zm-5-2a2 2 0 00-2 2v5a2 2 0 002 2h5a2 2 0 002-2V4a2 2 0 00-2-2h-5zM20 15h-5v5h5v-5zm-5-2a2 2 0 00-2 2v5a2 2 0 002 2h5a2 2 0 002-2v-5a2 2 0 00-2-2h-5zM9 15H4v5h5v-5zm-5-2a2 2 0 00-2 2v5a2 2 0 002 2h5a2 2 0 002-2v-5a2 2 0 00-2-2H4z"></path>
-      </svg>
-    ),
-    Split: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-        <path d="M5 21c-.55 0-1.02-.196-1.413-.587A1.926 1.926 0 013 19V5c0-.55.196-1.02.587-1.413A1.926 1.926 0 015 3h14c.55 0 1.02.196 1.413.587C20.803 3.98 21 4.45 21 5v14c0 .55-.196 1.02-.587 1.413A1.926 1.926 0 0119 21H5zm3-2V5H5v14h3zm2 0h9V5h-9v14z"></path>
-      </svg>
-    ),
-    Map: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-        <path d="M8.684 3.051a1 1 0 01.632 0L15 4.946l4.367-1.456A2 2 0 0122 5.387V17.28a2 2 0 01-1.367 1.898l-5.317 1.772a1 1 0 01-.632 0L9 19.054 4.632 20.51A2 2 0 012 18.613V6.72a2 2 0 011.368-1.898l5.316-1.772zM10 17.28l4 1.334V6.72l-4-1.334V17.28zM8 5.387L4 6.721v11.892l4-1.334V5.387zm8 1.334v11.892l4-1.334V5.387l-4 1.334z"></path>
-      </svg>
-    ),
+  const handleBedSelection = (value) => {
+    let newSelection = new Set(selectedBeds);
+
+    if (value === "Any") {
+      setSelectedBeds(["Any"]); // รีเซ็ตทุกอย่าง
+    } else if (value === "Studio") {
+      setSelectedBeds(["Studio"]); // เลือก Studio เท่านั้น
+    } else {
+      if (newSelection.has(value)) {
+        newSelection.delete(value); // ถ้าคลิกซ้ำให้ลบออก
+      } else {
+        newSelection.add(value); // ถ้ายังไม่มีให้เพิ่ม
+      }
+
+      // ถ้าตัวเลขถูกเลือก ต้องรวม Studio
+      if (
+        [...newSelection].some((item) =>
+          ["1", "2", "3", "4", "5+"].includes(item)
+        )
+      ) {
+        newSelection.add("Studio");
+      } else {
+        newSelection.delete("Studio");
+      }
+
+      // ถ้าตัวเลขทั้งหมดถูกลบ และไม่มี Studio ให้เลือก Any กลับมา
+      if (newSelection.size === 0) {
+        newSelection.add("Any");
+      } else {
+        newSelection.delete("Any");
+      }
+
+      setSelectedBeds(Array.from(newSelection));
+    }
   };
 
-  const handleSelect = (option) => {
-    setSelected(option);
-    localStorage.setItem("viewOption", option); // เก็บค่าการเลือกใน localStorage
-    onSelect(option); // ส่งค่าไปที่ Test.js
+  const handleBathSelection = (value) => {
+    setSelectedBath(value);
   };
 
+  const handleReset = () => {
+    setSelectedBeds(["Any"]);
+    setSelectedBath("Any");
+  };
   return (
-    <div style={styles.viewoptionsbox}>
-      {["List", "Split", "Map"].map((option) => (
-        <button
-          key={option}
-          onClick={() => handleSelect(option)}
-          onMouseEnter={() => setHoveredButton(option)}
-          onMouseLeave={() => setHoveredButton(null)}
+    <div style={styles.filterContainer} ref={dropdownRef}>
+      <button
+        style={{
+          ...styles.DropdownButton,
+          ...(isDropdownHovered ? styles.DropdownButtonHover : {}),
+        }}
+        onClick={() => setIsOpen(!isOpen)}
+        onMouseEnter={() => setIsDropdownHovered(true)}
+        onMouseLeave={() => !isOpen && setIsDropdownHovered(false)}
+      >
+        Beds/baths
+        <svg
           style={{
-            ...styles.button,
-            backgroundColor:
-              selected === option
-                ? "#00828C"
-                : hoveredButton === option
-                ? "#DFF6F5"
-                : "transparent",
-            color:
-              selected === option
-                ? "#fff"
-                : hoveredButton === option
-                ? "#00828C"
-                : "#000",
-            fontWeight: selected === option ? "600" : "500",
-            padding: isMobileView ? "7px" : "8px 16px",
-            width: isMobileView ? "auto" : "80px",
-            gap: isMobileView ? "0px" : "5px",
+            ...styles.svgIcon,
+            fill: isDropdownHovered ? "#00828C" : "#585858",
           }}
+          viewBox="0 0 24 24"
         >
-          {isMobileView ? icons[option] : option}
-        </button>
-      ))}
+          <path d="M15.932 10a.5.5 0 01.385.82l-3.933 4.72a.5.5 0 01-.768 0l-3.933-4.72a.5.5 0 01.385-.82h7.864z"></path>
+        </svg>
+      </button>
+      {isOpen && (
+        <div
+          style={styles.container}
+          onMouseEnter={() => setIsDropdownHovered(true)}
+          onMouseLeave={() => setIsDropdownHovered(false)}
+        >
+          <div style={styles.bedsBathsSection}>
+            {/* Beds Section */}
+            <div style={styles.bedsContainer}>
+              <div style={styles.header}>
+                <h4 style={styles.title}>Beds</h4>
+                <p style={styles.subtitle}>Tap two numbers to select a range</p>
+              </div>
+              <div style={styles.optionsRow}>
+                {bedOptions.map((bed, index) => (
+                  <button
+                    key={bed}
+                    onClick={() => handleBedSelection(bed)}
+                    onMouseEnter={() => setIsHoveredBeds(bed)}
+                    onMouseLeave={() => setIsHoveredBeds(null)}
+                    style={{
+                      ...styles.optionButton,
+                      ...(selectedBeds.includes(bed)
+                        ? styles.optionButtonSelected
+                        : isHoveredBeds === bed
+                        ? styles.optionButtonHover
+                        : {}),
+                      flex: index === 0 ? 1.5 : 1, // ปรับให้ปุ่ม Any มีขนาดที่สมดุล
+                    }}
+                  >
+                    {bed}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Baths Section */}
+            <div style={styles.bathsContainer}>
+              <div style={styles.header}>
+                <h4 style={styles.title}>Baths</h4>
+              </div>
+              <div style={styles.optionsRow}>
+                {["Any", "1+", "1.5+", "2+", "2.5+", "3+", "4+"].map((bath) => (
+                  <button
+                    key={bath}
+                    onClick={() => handleBathSelection(bath)}
+                    onMouseEnter={() => setIsHoveredBaths(bath)}
+                    onMouseLeave={() => setIsHoveredBaths(null)}
+                    style={{
+                      ...styles.optionButton,
+                      ...(selectedBath === bath
+                        ? styles.optionButtonSelected
+                        : isHoveredBaths === bath
+                        ? styles.optionButtonHover
+                        : {}),
+                    }}
+                  >
+                    {bath}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Reset & Done Buttons */}
+            <div style={styles.buttonRow}>
+              <button
+                style={{
+                  ...styles.resetButton,
+                  ...(isResetHovered
+                    ? { backgroundColor: "rgba(21, 114, 122, 0.2)" }
+                    : {}),
+                }}
+                onClick={handleReset}
+                onMouseEnter={() => setIsResetHovered(true)}
+                onMouseLeave={() => setIsResetHovered(false)}
+              >
+                Reset
+              </button>
+
+              <button
+                style={{
+                  ...styles.doneButton,
+                  ...(isDoneHovered ? { backgroundColor: "#d55656" } : {}),
+                }}
+                onClick={() => setIsOpen(false)}
+                onMouseEnter={() => setIsDoneHovered(true)}
+                onMouseLeave={() => setIsDoneHovered(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 const styles = {
-  viewoptionsbox: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "4px",
-    borderRadius: "8px",
-    border: "1px solid #585858",
-    height: "43px",
-    justifyContent: "center",
+  filterContainer: {
+    position: "relative",
+    display: "inline-block",
+    fontFamily: `"Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Droid Sans", "Helvetica", "Arial", sans-serif`,
   },
-  button: {
-    border: "none",
+  DropdownButton: {
+    padding: "8px 12px",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    backgroundColor: "white",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
     cursor: "pointer",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    fontSize: "16px",
-    fontWeight: "500",
-    width: "80px",
-    fontFamily:
-      "Inter,-apple-system,BlinkMacSystemFont,Roboto,Droid Sans,Helvetica,Arial,sans-serif",
     display: "flex",
     alignItems: "center",
+    fontSize: "14px",
+    fontWeight: "500",
+    color: "#585858",
+    borderColor: "#585858",
+    lineHeight: "1.5",
+    height: "43px",
+    fontFamily: `"Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Droid Sans", "Helvetica", "Arial", sans-serif`,
+  },
+  DropdownButtonHover: {
+    backgroundColor: "#f1f1f1",
+    borderColor: "#00828C",
+    color: "#00828C",
+  },
+  svgIcon: {
+    width: "24px",
+    height: "24px",
+  },
+
+  container: {
+    position: "absolute",
+    top: "50px",
+    left: "0",
+    backgroundColor: "#fff",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+    padding: "20px",
+    zIndex: 1000,
+    width: "max-content",
+    fontFamily: `"Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Droid Sans", "Helvetica", "Arial", sans-serif`,
+  },
+  bedsBathsSection: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  bedsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    marginBottom: "1rem",
+  },
+  bathsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    marginBottom: "1rem",
+  },
+  header: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "start",
+    marginBottom: "1rem",
+    gap: "1rem",
+  },
+  title: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    color: "#333",
+  },
+  subtitle: {
+    fontSize: "14px",
+    color: "#666",
+  },
+
+  optionsRow: {
+    display: "flex",
+    flexWrap: "wrap",
     justifyContent: "center",
+    gap: "1px",
+    border: "1px solid #ccc",
+    borderRadius: "10px",
+    padding: "5px",
+    backgroundColor: "#fff",
+  },
+  optionButton: {
+    padding: "8px 16px",
+    margin: "0 1px",
+    border: "2px solid transparent",
+    backgroundColor: "transparent",
+    cursor: "pointer",
+    fontSize: "16px",
+    color: "#333",
+    borderRadius: "7px",
+    transition: "all 0.2s ease-in-out",
+    fontFamily: `"Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Droid Sans", "Helvetica", "Arial", sans-serif`,
+  },
+  optionButtonSelected: {
+    backgroundColor: "rgba(21, 114, 122, 0.2)",
+    fontWeight: "bold",
+    border: "2px solid #15727A",
+    color: "#15727A",
+  },
+  optionButtonHover: {
+    backgroundColor: "rgba(21, 114, 122, 0.2)",
+    color: "#00828C",
+    border: "2px solid #00828C",
+  },
+
+  buttonRow: {
+    display: "flex",
+    justifyContent: "end",
+    marginTop: "12px",
+    gap: "1rem",
+  },
+  resetButton: {
+    backgroundColor: "transparent",
+    color: "#15727A",
+    fontWeight: "bold",
+    border: "none",
+    padding: "12px 24px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontFamily: `"Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Droid Sans", "Helvetica", "Arial", sans-serif`,
+    width: "90px",
+    borderRadius: "6px",
+  },
+  doneButton: {
+    backgroundColor: "#C91C1C",
+    color: "#fff",
+    fontWeight: "bold",
+    border: "none",
+    borderRadius: "6px",
+    padding: "12px 24px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontFamily: `"Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Droid Sans", "Helvetica", "Arial", sans-serif`,
+    width: "90px",
   },
 };
 
-export default ViewOption;
+export default BedsBathsFilter;
