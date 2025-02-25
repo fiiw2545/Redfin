@@ -1,0 +1,1 @@
+const Home = require("../schema/HomeSchema");

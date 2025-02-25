@@ -24,6 +24,9 @@ import AccountSettings from "./pages/accountSettings";
 import ChangePasswordPage from "./pages/changepassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyID from "./pages/verifyId";
+import AddHome from "./pages/AddHome";
+import PropertyHeader from "./components/PropertyHeader/PropertyHeader.jsx";
+import PropertyDetails from "./pages/PropertyDetails.jsx";
 
 const App = () => {
   return (
@@ -55,6 +58,9 @@ const App = () => {
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         <Route path="/verify" element={<VerifyID />} />
+        <Route path="/addhome" element={<AddHome />} />
+        <Route path="/search" element={<PropertyHeader />} />
+        <Route path="/property/:id" element={<PropertyDetails />} />
       </Routes>
     </Router>
   );
