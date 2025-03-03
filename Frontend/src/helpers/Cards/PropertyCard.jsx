@@ -1,14 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./styles/PropertyCard.css";
 
 const PropertyCard = ({ property }) => {
   const navigate = useNavigate();
+  const [images, setImages] = useState([]); // เก็บรูปภาพจาก API
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // ฟังก์ชันที่ตรวจสอบและกำหนดคลาสสำหรับแท็กที่มีข้อความพิเศษ
+  // ตรวจสอบว่า property มีค่าและมี _id
+  useEffect(() => {
+    console.log("Property data:", property); // ตรวจสอบค่า property
+
+    if (!property || !property._id) {
+      console.error("❌ Property หรือ Property ID หายไป!");
+      return;
+    }
+
+    const fetchImages = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/homes/${property._id}/images`
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setImages(data.images);
+        } else {
+          console.error("เกิดข้อผิดพลาดในการโหลดรูปภาพ:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching images:", error.message);
+      }
+    };
+
+    fetchImages();
+  }, [property]);
+
+  // ใช้รูปภาพแรกจาก API ถ้ามี ถ้าไม่มีให้ใช้ภาพเริ่มต้น
+  const fullImageUrl =
+    images.length > 0 ? images[currentImageIndex] : "/default-image.jpg";
+
+  // ฟังก์ชันเปลี่ยนรูปไปข้างหน้า
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+  };
+
+  // ฟังก์ชันเปลี่ยนรูปไปข้างหลัง
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+  };
+
+  const handleCardClick = () => {
+    navigate(`/property/${property._id}`);
+    window.location.reload();
+  };
+
+  // ฟังก์ชันสำหรับกำหนดคลาสของแท็ก
   const getTagClass = (tag) => {
     switch (tag) {
       case "Listed by Redfin":
@@ -18,25 +68,6 @@ const PropertyCard = ({ property }) => {
       default:
         return "property-tag";
     }
-  };
-
-  // ฟังก์ชันสำหรับเปลี่ยนรูปไปข้างหน้า
-  const handleNextImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev < property.images.length - 1 ? prev + 1 : 0
-    );
-  };
-
-  // ฟังก์ชันสำหรับเปลี่ยนรูปไปข้างหลัง
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prev) =>
-      prev > 0 ? prev - 1 : property.images.length - 1
-    );
-  };
-
-  const handleCardClick = () => {
-    navigate(`/property/${property.id}`);
-    window.location.reload();
   };
 
   return (
@@ -49,11 +80,10 @@ const PropertyCard = ({ property }) => {
       <div className="photo-slider">
         <img
           className="homecard-image"
-          src={property.images[currentImageIndex]}
-          alt={`Photo of ${property.address.full}`}
+          src={fullImageUrl}
+          alt={`Photo of ${property.address?.full || "property"}`}
         />
 
-        {/* แสดงแท็กที่ตำแหน่งใกล้กับรูปภาพ */}
         <div className="property-tags">
           {property.tags &&
             property.tags.map((tag, index) => (
@@ -64,9 +94,14 @@ const PropertyCard = ({ property }) => {
         </div>
       </div>
 
-      {/* ปุ่มแสดงเมื่อ hover */}
       <div className={`slider-controls ${isHovered ? "show" : ""}`}>
-        <button onClick={handlePrevImage} className="slider-button prev">
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // หยุด event ไม่ให้ส่งไปยัง parent
+            handlePrevImage(e);
+          }}
+          className="slider-button prev"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -76,7 +111,13 @@ const PropertyCard = ({ property }) => {
             <path d="M16.866 23.134l1.06-1.06a.25.25 0 000-.355L7.81 11.603l10.116-10.115a.25.25 0 000-.355l-1.06-1.06a.25.25 0 00-.354 0L5.16 11.427a.25.25 0 000 .353L16.512 23.134a.25.25 0 00.354 0"></path>
           </svg>
         </button>
-        <button onClick={handleNextImage} className="slider-button next">
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // หยุด event ไม่ให้ส่งไปยัง parent
+            handleNextImage(e);
+          }}
+          className="slider-button next"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -92,7 +133,6 @@ const PropertyCard = ({ property }) => {
         <div className="property-header">
           <h3 className="property-price">${property.price.toLocaleString()}</h3>
           <div className="property-actions">
-            {/* ปุ่ม Favorite */}
             <button
               className={`favorite-button ${isFavorite ? "active" : ""}`}
               onClick={(e) => {
@@ -106,7 +146,6 @@ const PropertyCard = ({ property }) => {
               </svg>
             </button>
 
-            {/* ปุ่ม Share */}
             <button
               className="share-button"
               title="Share this Property"

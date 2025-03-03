@@ -53,6 +53,6 @@ const HomeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Home = mongoose.model("Home", HomeSchema);
+const Home = mongoose.model("Home", HomeSchema, "Home");
 
 module.exports = Home;

@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const cors = require("cors");
 const userRoutes = require("./routes/UserRoutes");
+const HomeRoutes = require("./routes/HomeRoutes");
 const cookieParser = require("cookie-parser");
 
 // โหลดค่าตัวแปรจาก .env
@@ -23,11 +24,14 @@ const corsOptions = {
   credentials: true, // ให้ส่ง cookies ไปพร้อมกับคำขอ
 };
 app.use(cors(corsOptions)); // ใช้ CORS ด้วยตัวเลือกที่ตั้งค่าไว้
-
 app.use(cookieParser());
+
+// ✅ ต้องมาก่อน API Routes
+app.use("/uploads", express.static("uploads"));
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/homes", HomeRoutes);
 
 // หากเส้นทางไม่ตรงกับที่กำหนดไว้
 app.use((req, res, next) => {
@@ -45,5 +49,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-app.use("/uploads", express.static("uploads"));

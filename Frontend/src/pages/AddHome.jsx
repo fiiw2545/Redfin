@@ -1,6 +1,89 @@
 import { useState } from "react";
 import axios from "axios";
 
+const styles = {
+  addHomeContainer: {
+    width: "80%",
+    margin: "0 auto",
+    padding: "20px",
+    backgroundColor: "#f9f9f9",
+    borderRadius: "8px",
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+  },
+  formSection: {
+    marginBottom: "20px",
+  },
+  formSectionTitle: {
+    fontSize: "20px",
+    marginBottom: "10px",
+    color: "#333",
+    textDecoration: "underline",
+  },
+  input: {
+    width: "100%",
+    padding: "10px",
+    margin: "10px 0",
+    border: "1px solid #ccc",
+    borderRadius: "5px",
+    boxSizing: "border-box",
+    fontSize: "16px",
+  },
+  textarea: {
+    resize: "vertical",
+    padding: "15px",
+  },
+  button: {
+    padding: "12px 20px",
+    backgroundColor: "#4caf50",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "16px",
+    marginTop: "10px",
+    transition: "background-color 0.3s ease",
+  },
+  buttonHover: {
+    backgroundColor: "#45a049",
+  },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
+    cursor: "not-allowed",
+  },
+  errorMessages: {
+    backgroundColor: "#f8d7da",
+    color: "#721c24",
+    padding: "10px",
+    marginBottom: "20px",
+    borderRadius: "5px",
+  },
+  errorMessageItem: {
+    marginBottom: "5px",
+  },
+  furnitureItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "10px",
+  },
+  imagePreview: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+  },
+  imagePreviewImg: {
+    width: "150px",
+    height: "100px",
+    objectFit: "cover",
+    borderRadius: "5px",
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
+  },
+  addHomeForm: {
+    display: "flex",
+    flexDirection: "column",
+  },
+};
+
 const AddHome = () => {
   const [home, setHome] = useState({
     name: "",
@@ -9,30 +92,73 @@ const AddHome = () => {
       beds: "",
       baths: "",
       sqft: "",
-      yearBuilt: "", // เพิ่มปีที่สร้าง
-      lotSize: "", // เพิ่มขนาดที่ดิน
+      lot_size: "",
+      parking: "",
     },
     address: {
+      full: "",
       street: "",
       city: "",
       state: "",
       zip: "",
-      neighborhood: "", // เพิ่มย่าน/เขต
+      latitude: "",
+      longitude: "",
+    },
+    features: {
+      has_walkthrough: false,
+      has_video_tour: false,
+      amenities: [],
+    },
+    agent: {
+      name: "",
+      company: "",
+      phone: "",
+      email: "",
     },
     property_type: "",
     description: "",
-    features: [], // เพิ่มคุณสมบัติพิเศษ
-    status: "available", // สถานะบ้าน (available, pending, sold)
+    images: [],
+    furniture: [{ name: "", type: "", brand: "", condition: "" }],
+    tags: [],
+    listed_date: "",
+    sold_date: "",
+    status: "Coming soon",
+    for_rent: false,
+    hoa_dues: "",
+    year_built: "",
   });
 
-  const [images, setImages] = useState([]); // เก็บหลายรูป
-  const [imageUrls, setImageUrls] = useState([]); // เก็บ URL หลายรูป
+  const [imageUrls, setImageUrls] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessages, setErrorMessages] = useState([]);
+  const [description, setDescription] = useState("");
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    // จัดการข้อมูลแบบ nested
-    if (name.includes(".")) {
+    const { name, value, type, checked } = e.target;
+
+    // การจัดการกับ checkbox
+    if (type === "checkbox") {
+      if (name === "features.has_walkthrough") {
+        setHome((prev) => ({
+          ...prev,
+          features: { ...prev.features, has_walkthrough: checked },
+        }));
+      } else if (name === "features.has_video_tour") {
+        setHome((prev) => ({
+          ...prev,
+          features: { ...prev.features, has_video_tour: checked },
+        }));
+      } else if (name === "amenities") {
+        const updatedAmenities = checked
+          ? [...home.features.amenities, value]
+          : home.features.amenities.filter((item) => item !== value);
+
+        setHome((prev) => ({
+          ...prev,
+          features: { ...prev.features, amenities: updatedAmenities },
+        }));
+      }
+    } else if (name.includes(".")) {
       const [parent, child] = name.split(".");
       setHome((prev) => ({
         ...prev,
@@ -46,17 +172,57 @@ const AddHome = () => {
     }
   };
 
+  const handleTagChange = (e) => {
+    const { value, checked } = e.target;
+    if (checked) {
+      setHome((prevState) => ({
+        ...prevState,
+        tags: [...prevState.tags, value],
+      }));
+    } else {
+      setHome((prevState) => ({
+        ...prevState,
+        tags: prevState.tags.filter((tag) => tag !== value),
+      }));
+    }
+  };
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages((prev) => [...prev, ...files]);
+    setHome((prev) => ({
+      ...prev,
+      images: [...prev.images, ...files],
+    }));
+  };
+
+  const handleFurnitureChange = (index, e) => {
+    const { name, value } = e.target;
+    const updatedFurniture = [...home.furniture];
+    updatedFurniture[index] = { ...updatedFurniture[index], [name]: value };
+    setHome((prev) => ({ ...prev, furniture: updatedFurniture }));
+  };
+
+  const addFurniture = () => {
+    setHome((prev) => ({
+      ...prev,
+      furniture: [
+        ...prev.furniture,
+        { name: "", type: "", brand: "", condition: "" },
+      ],
+    }));
+  };
+
+  const removeFurniture = (index) => {
+    const updatedFurniture = home.furniture.filter((_, i) => i !== index);
+    setHome((prev) => ({ ...prev, furniture: updatedFurniture }));
   };
 
   const handleUpload = async () => {
-    if (images.length === 0) return alert("กรุณาเลือกรูปภาพ");
+    if (home.images.length === 0) return alert("กรุณาเลือกรูปภาพ");
     setLoading(true);
 
     try {
-      const uploadPromises = images.map(async (image) => {
+      const uploadPromises = home.images.map(async (image) => {
         const formData = new FormData();
         formData.append("image", image);
 
@@ -72,7 +238,7 @@ const AddHome = () => {
       });
 
       const urls = await Promise.all(uploadPromises);
-      setImageUrls((prev) => [...prev, ...urls]);
+      setImageUrls(urls);
     } catch (error) {
       console.error("Error uploading images:", error);
       alert("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
@@ -84,6 +250,9 @@ const AddHome = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessages([]);
+
+    const fullAddress = `${home.address.street}, ${home.address.city}, ${home.address.state}, ${home.address.zip}`;
 
     try {
       const response = await axios.post(
@@ -96,8 +265,11 @@ const AddHome = () => {
             beds: Number(home.details.beds),
             baths: Number(home.details.baths),
             sqft: Number(home.details.sqft),
-            yearBuilt: Number(home.details.yearBuilt),
-            lotSize: Number(home.details.lotSize),
+            lot_size: Number(home.details.lot_size),
+          },
+          address: {
+            ...home.address,
+            full: fullAddress,
           },
           images: imageUrls,
         },
@@ -105,22 +277,43 @@ const AddHome = () => {
       );
 
       alert("เพิ่มบ้านสำเร็จ!");
-      // รีเซ็ตฟอร์ม
       setHome({
         name: "",
         price: "",
-        details: { beds: "", baths: "", sqft: "", yearBuilt: "", lotSize: "" },
-        address: { street: "", city: "", state: "", zip: "", neighborhood: "" },
+        details: { beds: "", baths: "", sqft: "", lot_size: "", parking: "" },
+        address: {
+          full: "",
+          street: "",
+          city: "",
+          state: "",
+          zip: "",
+          latitude: "",
+          longitude: "",
+        },
+        features: {
+          has_walkthrough: false,
+          has_video_tour: false,
+          amenities: [],
+        },
+        agent: { name: "", company: "", phone: "", email: "" },
         property_type: "",
         description: "",
-        features: [],
-        status: "available",
+        images: [],
+        furniture: [{ name: "", type: "", brand: "", condition: "" }],
+        tags: [],
+        listed_date: "",
+        sold_date: "",
+        status: "Coming soon",
+        for_rent: false,
+        hoa_dues: "",
+        year_built: "",
       });
-      setImages([]);
       setImageUrls([]);
     } catch (error) {
       console.error("Error adding home:", error);
-      alert(error.response?.data?.message || "เกิดข้อผิดพลาดในการเพิ่มบ้าน");
+      setErrorMessages([
+        error.response?.data?.message || "เกิดข้อผิดพลาดในการเพิ่มบ้าน",
+      ]);
     } finally {
       setLoading(false);
     }
@@ -129,7 +322,20 @@ const AddHome = () => {
   return (
     <div className="add-home-container">
       <h2>เพิ่มข้อมูลบ้าน</h2>
+      {errorMessages.length > 0 && (
+        <div className="error-messages">
+          <ul>
+            {errorMessages.map((msg, index) => (
+              <li key={index} style={{ color: "red" }}>
+                {msg}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="add-home-form">
+        {/* General Info */}
         <div className="form-section">
           <h3>ข้อมูลทั่วไป</h3>
           <input
@@ -155,13 +361,14 @@ const AddHome = () => {
             required
           >
             <option value="">เลือกประเภทอสังหาริมทรัพย์</option>
-            <option value="house">บ้านเดี่ยว</option>
-            <option value="townhouse">ทาวน์เฮาส์</option>
-            <option value="condo">คอนโดมิเนียม</option>
-            <option value="land">ที่ดิน</option>
+            <option value="Condo">คอนโดมิเนียม</option>
+            <option value="House">บ้านเดี่ยว</option>
+            <option value="Townhouse">ทาวน์เฮาส์</option>
+            <option value="Land">ที่ดิน</option>
           </select>
         </div>
 
+        {/* Property Details */}
         <div className="form-section">
           <h3>รายละเอียดอสังหาริมทรัพย์</h3>
           <input
@@ -170,7 +377,6 @@ const AddHome = () => {
             value={home.details.beds}
             placeholder="จำนวนห้องนอน"
             onChange={handleChange}
-            required
           />
           <input
             type="number"
@@ -178,7 +384,6 @@ const AddHome = () => {
             value={home.details.baths}
             placeholder="จำนวนห้องน้ำ"
             onChange={handleChange}
-            required
           />
           <input
             type="number"
@@ -186,48 +391,39 @@ const AddHome = () => {
             value={home.details.sqft}
             placeholder="พื้นที่ใช้สอย (ตร.ม.)"
             onChange={handleChange}
-            required
           />
           <input
             type="number"
-            name="details.yearBuilt"
-            value={home.details.yearBuilt}
-            placeholder="ปีที่สร้าง"
+            name="details.lot_size"
+            value={home.details.lot_size}
+            placeholder="ขนาดที่ดิน (ไร่)"
             onChange={handleChange}
           />
           <input
-            type="number"
-            name="details.lotSize"
-            value={home.details.lotSize}
-            placeholder="ขนาดที่ดิน (ตร.วา)"
+            type="text"
+            name="details.parking"
+            value={home.details.parking}
+            placeholder="ที่จอดรถ"
             onChange={handleChange}
           />
         </div>
 
+        {/* Address */}
         <div className="form-section">
-          <h3>ที่ตั้ง</h3>
+          <h3>ที่อยู่</h3>
           <input
             type="text"
             name="address.street"
             value={home.address.street}
-            placeholder="ที่อยู่"
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="text"
-            name="address.neighborhood"
-            value={home.address.neighborhood}
-            placeholder="ย่าน/เขต"
+            placeholder="ถนน"
             onChange={handleChange}
           />
           <input
             type="text"
             name="address.city"
             value={home.address.city}
-            placeholder="เมือง/อำเภอ"
+            placeholder="เมือง"
             onChange={handleChange}
-            required
           />
           <input
             type="text"
@@ -235,7 +431,6 @@ const AddHome = () => {
             value={home.address.state}
             placeholder="จังหวัด"
             onChange={handleChange}
-            required
           />
           <input
             type="text"
@@ -243,55 +438,261 @@ const AddHome = () => {
             value={home.address.zip}
             placeholder="รหัสไปรษณีย์"
             onChange={handleChange}
+          />
+        </div>
+
+        {/* Latitude and Longitude */}
+        <div className="form-section">
+          <h3>ตำแหน่ง (ละติจูด, ลองติจูด)</h3>
+          <input
+            type="number"
+            name="address.latitude"
+            value={home.address.latitude}
+            placeholder="ละติจูด"
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="number"
+            name="address.longitude"
+            value={home.address.longitude}
+            placeholder="ลองติจูด"
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* Status */}
+        <div className="form-section">
+          <h3>สถานะบ้าน</h3>
+          <select name="status" value={home.status} onChange={handleChange}>
+            <option value="Coming soon">พร้อมขาย</option>
+            <option value="Sold">ขายแล้ว</option>
+          </select>
+        </div>
+
+        {/*การเช่า */}
+        <div className="form-section">
+          <h3>สถานะการให้เช่า</h3>
+          <select
+            name="for_rent"
+            value={home.for_rent ? "true" : "false"}
+            onChange={(e) =>
+              setHome({ ...home, for_rent: e.target.value === "true" })
+            }
+          >
+            <option value="true">ให้เช่า</option>
+            <option value="false">ไม่ให้เช่า</option>
+          </select>
+        </div>
+
+        {/* Listed Date */}
+        <div className="form-section">
+          <h3>วันที่ประกาศ</h3>
+          <input
+            type="date"
+            name="listed_date"
+            value={home.listed_date}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* HOA Dues */}
+        <div className="form-section">
+          <h3>ค่าใช้จ่ายของ HOA</h3>
+          <input
+            type="number"
+            name="hoa_dues"
+            value={home.hoa_dues}
+            onChange={handleChange}
+            placeholder="ค่าใช้จ่ายของ HOA (หากมี)"
+          />
+        </div>
+
+        {/* Year Built */}
+        <div className="form-section">
+          <h3>ปีที่สร้าง</h3>
+          <input
+            type="number"
+            name="year_built"
+            value={home.year_built}
+            onChange={handleChange}
+            placeholder="ปีที่สร้าง"
+          />
+        </div>
+
+        {/* Tags */}
+        <div className="form-section">
+          <h3>เลือก Tags</h3>
+          <div>
+            <input
+              type="checkbox"
+              name="tags"
+              value="Listed by Redfin"
+              checked={home.tags.includes("Listed by Redfin")}
+              onChange={handleTagChange}
+            />
+            <label>Listed by Redfin</label>
+          </div>
+          <div>
+            <input
+              type="checkbox"
+              name="tags"
+              value="3D Walkthrough"
+              checked={home.tags.includes("3D Walkthrough")}
+              onChange={handleTagChange}
+            />
+            <label>3D Walkthrough</label>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="form-section">
+          <h3>คุณสมบัติ</h3>
+          <div>
+            <input
+              type="checkbox"
+              name="features.has_walkthrough"
+              checked={home.features.has_walkthrough}
+              onChange={handleChange}
+            />
+            <label>มีการนำเสนอเสมือนจริง</label>
+          </div>
+          <div>
+            <input
+              type="checkbox"
+              name="features.has_video_tour"
+              checked={home.features.has_video_tour}
+              onChange={handleChange}
+            />
+            <label>มีวีดีโอทัวร์</label>
+          </div>
+          <div>
+            <input
+              type="checkbox"
+              name="amenities"
+              value="swimming_pool"
+              checked={home.features.amenities.includes("swimming_pool")}
+              onChange={handleChange}
+            />
+            <label>สระว่ายน้ำ</label>
+          </div>
+          <div>
+            <input
+              type="checkbox"
+              name="amenities"
+              value="gym"
+              checked={home.features.amenities.includes("gym")}
+              onChange={handleChange}
+            />
+            <label>ฟิตเนส</label>
+          </div>
+        </div>
+
+        {/* Furniture */}
+        <div className="form-section">
+          <h3>เฟอร์นิเจอร์</h3>
+          {home.furniture.map((furniture, index) => (
+            <div key={index}>
+              <input
+                type="text"
+                name="name"
+                value={furniture.name}
+                placeholder="ชื่อเฟอร์นิเจอร์"
+                onChange={(e) => handleFurnitureChange(index, e)}
+              />
+              <input
+                type="text"
+                name="type"
+                value={furniture.type}
+                placeholder="ประเภทเฟอร์นิเจอร์"
+                onChange={(e) => handleFurnitureChange(index, e)}
+              />
+              <input
+                type="text"
+                name="brand"
+                value={furniture.brand}
+                placeholder="แบรนด์"
+                onChange={(e) => handleFurnitureChange(index, e)}
+              />
+              <input
+                type="text"
+                name="condition"
+                value={furniture.condition}
+                placeholder="สภาพ"
+                onChange={(e) => handleFurnitureChange(index, e)}
+              />
+              <button type="button" onClick={() => removeFurniture(index)}>
+                ลบ
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addFurniture}>
+            เพิ่มเฟอร์นิเจอร์
+          </button>
+        </div>
+
+        {/* Image Upload */}
+        <div className="form-section">
+          <h3>อัพโหลดรูปภาพ</h3>
+          <input type="file" multiple onChange={handleImageChange} />
+          <button type="button" onClick={handleUpload}>
+            อัปโหลดรูปภาพ
+          </button>
+        </div>
+
+        {/* About */}
+        <div className="form-section">
+          <h3>รายละเอียด</h3>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)} // เปลี่ยนค่าของ description
+            placeholder="กรุณากรอกรายละเอียด"
+          />
+        </div>
+
+        {/* Seller Information */}
+        <div className="form-section">
+          <h3>ข้อมูลผู้ขาย</h3>
+          <input
+            type="text"
+            name="agent.name"
+            value={home.agent.name}
+            placeholder="ชื่อผู้ขาย"
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="text"
+            name="agent.company"
+            value={home.agent.company}
+            placeholder="บริษัท"
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="text"
+            name="agent.phone"
+            value={home.agent.phone}
+            placeholder="เบอร์โทรศัพท์"
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="email"
+            name="agent.email"
+            value={home.agent.email}
+            placeholder="อีเมล"
+            onChange={handleChange}
             required
           />
         </div>
 
         <div className="form-section">
-          <h3>รูปภาพ</h3>
-          <input
-            type="file"
-            multiple
-            onChange={handleImageChange}
-            accept="image/*"
-          />
-          <button
-            type="button"
-            onClick={handleUpload}
-            disabled={loading || images.length === 0}
-          >
-            {loading ? "กำลังอัปโหลด..." : "อัปโหลดรูปภาพ"}
+          <button type="submit" disabled={loading}>
+            {loading ? "กำลังบันทึก..." : "บันทึก"}
           </button>
-          <div className="image-preview">
-            {imageUrls.map((url, index) => (
-              <img
-                key={index}
-                src={`http://localhost:5000${url}`}
-                alt={`Preview ${index + 1}`}
-                width="100"
-              />
-            ))}
-          </div>
         </div>
-
-        <div className="form-section">
-          <h3>รายละเอียดเพิ่มเติม</h3>
-          <textarea
-            name="description"
-            value={home.description}
-            placeholder="รายละเอียดเพิ่มเติม"
-            onChange={handleChange}
-            rows="4"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="submit-button"
-          disabled={loading || imageUrls.length === 0}
-        >
-          {loading ? "กำลังบันทึก..." : "เพิ่มข้อมูลบ้าน"}
-        </button>
       </form>
     </div>
   );

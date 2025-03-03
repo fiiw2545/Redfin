@@ -60,7 +60,7 @@ const App = () => {
         <Route path="/verify" element={<VerifyID />} />
         <Route path="/addhome" element={<AddHome />} />
         <Route path="/search" element={<PropertyHeader />} />
-        <Route path="/property/:id" element={<PropertyDetails />} />
+        <Route path="/property/:propertyId" element={<PropertyDetails />} />
       </Routes>
     </Router>
   );

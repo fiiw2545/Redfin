@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useGlobalEvent } from "../../context/GlobalEventContext";
-import properties from "../../data/properties";
 import { sortProperties } from "../../helpers/sortProperties";
 import { CiLineHeight } from "react-icons/ci";
 
@@ -17,10 +16,14 @@ const sortOptions = [
 
 const viewOptions = ["Photos", "Table"];
 
+const homesPerPage = 8; // จำนวนบ้านที่แสดงต่อหน้า
+
 const PropertyHeader = ({
   displayedProperties,
   onSortChange,
   onViewChange,
+  currentPage,
+  totalHomes, // จำนวนบ้านทั้งหมดที่ดึงจาก backend
 }) => {
   const { windowSize } = useGlobalEvent();
   const isTablet = windowSize.width <= 768;
@@ -29,8 +32,24 @@ const PropertyHeader = ({
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("query");
 
+  // ดึงค่า page จาก URL parameter
+  const pageFromUrl = parseInt(searchParams.get("page")) || 1;
+
   const [selectedSort, setSelectedSort] = useState("Recommended");
   const [selectedView, setSelectedView] = useState("Photos");
+  const [currentPageIndex, setCurrentPageIndex] = useState(pageFromUrl);
+
+  // เพิ่ม useEffect เพื่อติดตามการเปลี่ยนแปลงของ URL
+  useEffect(() => {
+    const newPage = parseInt(searchParams.get("page")) || 1;
+    if (currentPageIndex !== newPage) {
+      setCurrentPageIndex(newPage);
+    }
+  }, [location.search]); // ติดตามการเปลี่ยนแปลงของ URL parameters
+
+  // คำนวณ index โดยใช้ currentPageIndex
+  const startHomeIndex = (currentPageIndex - 1) * homesPerPage + 1;
+  const endHomeIndex = Math.min(currentPageIndex * homesPerPage, totalHomes);
 
   // ✅ Handle Sort Change
   const handleSortChange = (e) => {
@@ -48,7 +67,7 @@ const PropertyHeader = ({
 
   return (
     <div style={styles.container}>
-      {/* ✅ Desktop Layout */}
+      {/* Desktop Layout */}
       {!isTablet ? (
         <div style={styles.desktopRow}>
           <h1 style={styles.title}>
@@ -58,9 +77,12 @@ const PropertyHeader = ({
           </h1>
           <div style={styles.rightContainer}>
             <span style={styles.count}>
-              <b>{displayedProperties.length}</b> of{" "}
-              <b>{properties.length} homes</b>
+              <b>
+                {startHomeIndex}-{endHomeIndex}
+              </b>{" "}
+              of <b>{totalHomes} homes</b>
             </span>
+
             <span style={styles.sort}>
               <b>Sort:</b>
               <div style={styles.selectContainer}>
@@ -117,8 +139,10 @@ const PropertyHeader = ({
             }}
           >
             <span style={styles.count}>
-              <b>{displayedProperties.length}</b> of{" "}
-              <b>{properties.length} homes</b>
+              <b>
+                {startHomeIndex}-{endHomeIndex}
+              </b>{" "}
+              of <b>{totalHomes} homes</b>
             </span>
             <div
               style={{

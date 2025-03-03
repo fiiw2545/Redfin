@@ -1,39 +1,65 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+const {
+  getAllHomes,
+  getHomeById,
+  createHome,
+  updateHome,
+  deleteHome,
+  getImageHome,
+} = require("../Controllers/HomeControllers");
+
 const router = express.Router();
-const Home = require("../schema/HomeSchema");
-// ✅ API เพิ่มบ้านใหม่
-// ตั้งค่าที่เก็บไฟล์ (เก็บไว้ในโฟลเดอร์ uploads/)
+
+// กำหนดการจัดเก็บไฟล์
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // เก็บไฟล์ไว้ที่โฟลเดอร์นี้
+  destination: function (req, file, cb) {
+    const dir = "uploads/homes";
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
   },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // ตั้งชื่อไฟล์ให้ไม่ซ้ำ
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
-// ตั้งค่า Multer
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // จำกัดขนาดไฟล์ 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("ไฟล์ที่อัปโหลดต้องเป็นรูปภาพเท่านั้น"));
+    }
+  },
+});
 
-// ✅ API อัปโหลดรูปภาพ
+// อัปโหลดรูปภาพ
 router.post("/upload", upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "ไม่พบไฟล์รูปภาพ" });
+    }
+    const imageUrl = `/uploads/homes/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (error) {
+    res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ" });
   }
-  res.json({ imageUrl: `/uploads/${req.file.filename}` }); // ส่ง URL ไฟล์กลับไป
 });
 
-// ✅ API เพิ่มบ้าน (รองรับอัปโหลดรูป)
-router.post("/", async (req, res) => {
-  try {
-    const newHome = new Home(req.body);
-    const savedHome = await newHome.save();
-    res.status(201).json(savedHome);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+// CRUD operations สำหรับบ้าน
+router.get("/", getAllHomes);
+router.get("/:id", getHomeById);
+router.post("/", createHome);
+router.put("/:id", updateHome);
+router.delete("/:id", deleteHome);
+router.get("/:id/images", getImageHome);
 
 module.exports = router;
