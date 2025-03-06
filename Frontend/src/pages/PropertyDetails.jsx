@@ -718,7 +718,7 @@ const HeartIcon = () => (
 
 const HideIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="#6b7280">
-    <path d="M2.293 2.293a1 1 0 011.414 0l18 18a1 1 0 01-1.414 1.414l-3.025-3.024A11.046 11.046 0 0112 20c-5.517 0-9.314-3.86-10.92-7.606a1 1 0 010-.788c.802-1.869 2.133-3.745 3.943-5.169l-2.73-2.73a1 1 0 010-1.414zm4.157 5.57C4.964 8.977 3.825 10.47 3.097 12 4.575 15.11 7.7 18 12 18c1.394 0 2.655-.3 3.776-.81l-1.744-1.744a4.002 4.002 0 01-5.478-5.478L6.45 7.864z"></path>
+    <path d="M2.293 2.293a1 1 0 011.414 0l18 18a1 1 0 01-1.414 1.414l-3.025-3.024A11.046 11.046 0 0112 20c-5.517 0-9.314-3.86-10.92-7.606a1 1 0 010-.788c.802-1.869 2.133-3.745 3.943-5.169l-2.73-2.73a1 1 0 010-1.414zm4.157 5.57C4.964 8.977 3.825 10.47 3.097 12 4.575 15.11 7.7 18 18c1.394 0 2.655-.3 3.776-.81l-1.744-1.744a4.002 4.002 0 01-5.478-5.478L6.45 7.864z"></path>
     <path d="M12 6c-.393 0-.775.024-1.145.07a1 1 0 01-.243-1.986C11.063 4.03 11.526 4 12 4c5.517 0 9.314 3.86 10.92 7.606a1 1 0 010 .788 13.476 13.476 0 01-1.745 2.95 1 1 0 01-1.578-1.229c.525-.674.962-1.392 1.306-2.115C19.425 8.89 16.3 6 12 6z"></path>
     <path d="M12.903 8.103c-.224-.052-.348.209-.186.372l2.808 2.808c.163.163.424.038.373-.186a4.006 4.006 0 00-2.995-2.994z"></path>
   </svg>
@@ -870,100 +870,221 @@ const PropertyDetailsCard = () => {
 
       {/* Parking Section */}
       <div style={PropertyDetailsStyles.section}>
-        <button
+        <div
           style={PropertyDetailsStyles.sectionHeader}
           onClick={() => toggleSection("parking")}
         >
-          <span>Parking</span>
-          <span style={PropertyDetailsStyles.expandIcon}>
-            {expandedSections.parking ? "−" : "+"}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              style={{ marginRight: "8px" }}
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M11.336 3.253a1 1 0 011.328 0l9 8a1 1 0 01-1.328 1.494L20 12.45V19a2 2 0 01-2 2H6a2 2 0 01-2-2v-6.55l-.336.297a1 1 0 01-1.328-1.494l9-8zM6 10.67V19h2v-7a1 1 0 011-1h6a1 1 0 011 1v7h2v-8.329l-6-5.333-6 5.333zM14 19v-2h-4v2h4zm-4-4h4v-2h-4v2z"
+              ></path>
+            </svg>
+            <span>Parking</span>
+          </div>
+          <span>
+            {expandedSections.parking ? <ArrowUpIcon /> : <ArrowDownIcon />}
           </span>
-        </button>
+        </div>
         {expandedSections.parking && (
           <div style={PropertyDetailsStyles.sectionContent}>
-            <div style={PropertyDetailsStyles.detailItem}>
-              <span>Garage Spaces:</span>
-              <span>{property.details?.parking?.garage || "N/A"}</span>
-            </div>
-            <div style={PropertyDetailsStyles.detailItem}>
-              <span>Total Parking Spaces:</span>
-              <span>{property.details?.parking?.total || "N/A"}</span>
-            </div>
+            <h4 style={PropertyDetailsStyles.sectionTitle}>
+              Parking Information
+            </h4>
+            <ul style={PropertyDetailsStyles.list}>
+              <li style={PropertyDetailsStyles.listItem}>
+                Parking: {property.details?.parking || "N/A"}
+              </li>
+            </ul>
           </div>
         )}
       </div>
+
+      <div style={PropertyDetailsStyles.Line}></div>
 
       {/* Interior Features Section */}
       <div style={PropertyDetailsStyles.section}>
-        <button
+        <div
           style={PropertyDetailsStyles.sectionHeader}
           onClick={() => toggleSection("interior")}
         >
-          <span>Interior Features</span>
-          <span style={PropertyDetailsStyles.expandIcon}>
-            {expandedSections.interior ? "−" : "+"}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              style={{ marginRight: "8px" }}
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M12 4a5 5 0 00-2.5 9.332 1 1 0 01.5.865V16h4v-1.803a1 1 0 01.5-.865A5 5 0 0012 4zM5 9a7 7 0 1111 5.745V16a2 2 0 01-2 2h-4a2 2 0 01-2-2v-1.255A6.993 6.993 0 015 9z"
+              ></path>
+              <path d="M9 21a1 1 0 011-1h4a1 1 0 110 2h-4a1 1 0 01-1-1z"></path>
+            </svg>
+            <span>Interior</span>
+          </div>
+          <span>
+            {expandedSections.interior ? <ArrowUpIcon /> : <ArrowDownIcon />}
           </span>
-        </button>
+        </div>
         {expandedSections.interior && (
           <div style={PropertyDetailsStyles.sectionContent}>
-            <div style={PropertyDetailsStyles.detailItem}>
-              <span>Bedrooms:</span>
-              <span>{property.details?.beds || "N/A"}</span>
-            </div>
-            <div style={PropertyDetailsStyles.detailItem}>
-              <span>Bathrooms:</span>
-              <span>{property.details?.baths || "N/A"}</span>
-            </div>
-            <div style={PropertyDetailsStyles.detailItem}>
-              <span>Square Feet:</span>
-              <span>{property.details?.sqft?.toLocaleString() || "N/A"}</span>
-            </div>
-            {property.details?.appliances && (
-              <div style={PropertyDetailsStyles.detailItem}>
-                <span>Appliances:</span>
-                <span>{property.details.appliances.join(", ")}</span>
-              </div>
-            )}
+            <h4 style={PropertyDetailsStyles.sectionTitle}>
+              Interior Information
+            </h4>
+            <ul style={PropertyDetailsStyles.list}>
+              <li style={PropertyDetailsStyles.listItem}>
+                Bedrooms: {property.details?.beds || "N/A"}
+              </li>
+              <li style={PropertyDetailsStyles.listItem}>
+                Bathrooms: {property.details?.baths || "N/A"}
+              </li>
+              <li style={PropertyDetailsStyles.listItem}>
+                Square Feet: {property.details?.sqft?.toLocaleString() || "N/A"}
+              </li>
+            </ul>
           </div>
         )}
       </div>
+
+      <div style={PropertyDetailsStyles.Line}></div>
 
       {/* Exterior Features Section */}
       <div style={PropertyDetailsStyles.section}>
-        <button
+        <div
           style={PropertyDetailsStyles.sectionHeader}
           onClick={() => toggleSection("exterior")}
         >
-          <span>Exterior Features</span>
-          <span style={PropertyDetailsStyles.expandIcon}>
-            {expandedSections.exterior ? "−" : "+"}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <svg
+              viewBox="0 0 25 24"
+              width="24"
+              height="24"
+              style={{ marginRight: "8px" }}
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M11.282 15.602v-4.139l-2.75-2.75a.917.917 0 111.296-1.296l1.454 1.453V7.417a.917.917 0 011.833 0v4.203l1.454-1.453a.917.917 0 111.296 1.296l-2.75 2.75v1.389a6.418 6.418 0 00-.917-12.769 6.417 6.417 0 00-.916 12.769zm0 1.848a8.251 8.251 0 111.833 0v4.633a.917.917 0 11-1.833 0V17.45z"
+              ></path>
+            </svg>
+            <span>Exterior</span>
+          </div>
+          <span>
+            {expandedSections.exterior ? <ArrowUpIcon /> : <ArrowDownIcon />}
           </span>
-        </button>
+        </div>
         {expandedSections.exterior && (
           <div style={PropertyDetailsStyles.sectionContent}>
+            <h4 style={PropertyDetailsStyles.sectionTitle}>
+              Exterior Information
+            </h4>
+            <ul style={PropertyDetailsStyles.list}>
+              <li style={PropertyDetailsStyles.listItem}>
+                Lot Size: {property.details?.lot_size || "N/A"}
+              </li>
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div style={PropertyDetailsStyles.Line}></div>
+
+      {/* Financial */}
+      <div style={PropertyDetailsStyles.section}>
+        <div
+          style={PropertyDetailsStyles.sectionHeader}
+          onClick={() => toggleSection("financial")}
+        >
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <svg
+              viewBox="0 0 25 24"
+              width="24"
+              height="24"
+              style={{ marginRight: "8px" }}
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M4.795 12a8 8 0 1116 0 8 8 0 01-16 0zm8-10c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10zm0 3.5a1 1 0 011 1v.671a3 3 0 01.985.58 1 1 0 01-1.324 1.499 1 1 0 10-.661 1.75 3 3 0 011 5.83v.67a1 1 0 11-2 0v-.671a3 3 0 01-.984-.58 1 1 0 111.323-1.499 1 1 0 10.661-1.75 3 3 0 01-1-5.83V6.5a1 1 0 011-1z"
+              ></path>
+            </svg>
+            <span>Financial</span>
+          </div>
+          <span>
+            {expandedSections.financial ? <ArrowUpIcon /> : <ArrowDownIcon />}
+          </span>
+        </div>
+        {expandedSections.financial && (
+          <div style={PropertyDetailsStyles.sectionContent}>
             <div style={PropertyDetailsStyles.detailItem}>
-              <span>Lot Size:</span>
-              <span>{property.details?.lotSize || "N/A"}</span>
+              <span>Price:</span>
+              <span>${property.price?.toLocaleString() || "N/A"}</span>
             </div>
-            {property.details?.exterior && (
+            {property.details?.hoa_dues && (
               <div style={PropertyDetailsStyles.detailItem}>
-                <span>Exterior Features:</span>
-                <span>{property.details.exterior.join(", ")}</span>
+                <span>HOA Dues:</span>
+                <span>${property.details.hoa_dues}/month</span>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Additional Information */}
-      {property.hoaDues && (
-        <div style={PropertyDetailsStyles.section}>
-          <div style={PropertyDetailsStyles.detailItem}>
-            <span>HOA Dues:</span>
-            <span>${property.hoaDues}/month</span>
+      <div style={PropertyDetailsStyles.Line}></div>
+
+      {/* Property Information */}
+      <div style={PropertyDetailsStyles.section}>
+        <div
+          style={PropertyDetailsStyles.sectionHeader}
+          onClick={() => toggleSection("propertyInfo")}
+        >
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <svg
+              viewBox="0 0 25 24"
+              width="24"
+              height="24"
+              style={{ marginRight: "8px" }}
+            >
+              <path d="M4.5 4a2 2 0 012-2h8a1 1 0 01.707.293l5 5A1 1 0 0120.5 8v12a2 2 0 01-2 2h-12a2 2 0 01-2-2V4z"></path>
+            </svg>
+            <span>Property Information</span>
           </div>
+          <span>
+            {expandedSections.propertyInfo ? (
+              <ArrowUpIcon />
+            ) : (
+              <ArrowDownIcon />
+            )}
+          </span>
         </div>
-      )}
+        {expandedSections.propertyInfo && (
+          <div style={PropertyDetailsStyles.sectionContent}>
+            <div style={PropertyDetailsStyles.detailItem}>
+              <span>Property Type:</span>
+              <span>{property.property_type || "N/A"}</span>
+            </div>
+            <div style={PropertyDetailsStyles.detailItem}>
+              <span>Year Built:</span>
+              <span>{property.details?.year_built || "N/A"}</span>
+            </div>
+            {property.details?.features?.length > 0 && (
+              <div style={PropertyDetailsStyles.detailItem}>
+                <span>Features:</span>
+                <span>{property.details.features.join(", ")}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -1255,27 +1376,9 @@ const ContactCard = ({}) => {
 
   return (
     <div style={ContactCardStyles.container}>
-      <h3 style={ContactCardStyles.title}>{property?.name || "N/A"}</h3>
-      <p style={ContactCardStyles.price}>
-        Price: ${property?.price?.toLocaleString() || "N/A"}
-      </p>
-      <p style={ContactCardStyles.status}>
-        Status: {property?.status || "N/A"}
-      </p>
-      <p style={ContactCardStyles.date}>
-        Listed Date:{" "}
-        {property?.listed_date
-          ? new Date(property.listed_date).toLocaleDateString("en-GB")
-          : "N/A"}
-      </p>
-      <p style={ContactCardStyles.type}>
-        Type: {property?.property_type || "N/A"}
-      </p>
-      <p style={ContactCardStyles.description}>
-        {property?.description || "N/A"}
-      </p>
-      {/* เลือกวันที่ */}
+      <h3 style={ContactCardStyles.title}>Thinking of buying?</h3>
       <div style={ContactCardStyles.dateSelector}>
+        {/* ปุ่มย้อนกลับ */}
         <button
           style={
             currentIndex > 0
@@ -1284,9 +1387,17 @@ const ContactCard = ({}) => {
           }
           onClick={handlePrev}
         >
-          {"<"}
+          <svg
+            viewBox="0 0 25 24"
+            width="16"
+            height="16"
+            style={{ transform: "rotate(180deg)" }}
+          >
+            <path d="M9.99 18.707a1 1 0 010-1.414L15.285 12 9.99 6.707a1 1 0 111.414-1.414l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0z"></path>
+          </svg>
         </button>
 
+        {/* วันที่ */}
         <div style={ContactCardStyles.dateButtonsContainer}>
           {dateArray
             .slice(currentIndex, currentIndex + 3)
@@ -1300,13 +1411,38 @@ const ContactCard = ({}) => {
                 }}
                 onClick={() => handleDateSelect(index)}
               >
-                <div>{date.day}</div>
-                <div>{date.date}</div>
-                <div>{date.month}</div>
+                <div
+                  style={
+                    selectedDateIndex === index
+                      ? { ...ContactCardStyles.dayStyle, color: "#15727a" }
+                      : ContactCardStyles.dayStyle
+                  }
+                >
+                  {date.day}
+                </div>
+                <div
+                  style={
+                    selectedDateIndex === index
+                      ? { ...ContactCardStyles.dateStyle, color: "#15727a" }
+                      : ContactCardStyles.dateStyle
+                  }
+                >
+                  {date.date}
+                </div>
+                <div
+                  style={
+                    selectedDateIndex === index
+                      ? { ...ContactCardStyles.monthStyle, color: "#15727a" }
+                      : ContactCardStyles.monthStyle
+                  }
+                >
+                  {date.month}
+                </div>
               </button>
             ))}
         </div>
 
+        {/* ปุ่มไปข้างหน้า */}
         <button
           style={
             currentIndex + 3 < dateArray.length
@@ -1315,33 +1451,75 @@ const ContactCard = ({}) => {
           }
           onClick={handleNext}
         >
-          {">"}
+          <svg viewBox="0 0 25 24" width="16" height="16">
+            <path d="M9.99 18.707a1 1 0 010-1.414L15.285 12 9.99 6.707a1 1 0 111.414-1.414l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0z"></path>
+          </svg>
         </button>
       </div>
-      {/* เลือกประเภทการทัวร์ */}
+
       <div style={ContactCardStyles.tourOptions}>
         <button
           style={{
             ...ContactCardStyles.tourButton,
+            borderTopLeftRadius: "6px",
+            borderBottomLeftRadius: "6px",
             ...(selectedTourOption === "inPerson" &&
               ContactCardStyles.selectedTourOption),
           }}
           onClick={() => handleTourOptionSelect("inPerson")}
         >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            style={{
+              fill: selectedTourOption === "inPerson" ? "#15727a" : "#333",
+            }}
+          >
+            <path d="M12.707 2.793a1 1 0 00-1.414 0l-7 7-2 2a1 1 0 101.414 1.414L4 12.914V19.5a2 2 0 002 2h2a1 1 0 100-2H6v-8.586l6-6 6 6V19.5h-2a1 1 0 100 2h2a2 2 0 002-2v-6.586l.293.293a1 1 0 001.414-1.414l-9-9zm2 11l-2-2a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414l.293-.293V20.5a1 1 0 102 0v-5.586l.293.293a1 1 0 001.414-1.414z"></path>
+          </svg>
           Tour in person
         </button>
         <button
           style={{
             ...ContactCardStyles.tourButton,
+            borderTopRightRadius: "6px",
+            borderBottomRightRadius: "6px",
             ...(selectedTourOption === "videoChat" &&
               ContactCardStyles.selectedTourOption),
           }}
           onClick={() => handleTourOptionSelect("videoChat")}
         >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            style={{
+              fill: selectedTourOption === "videoChat" ? "#15727a" : "#333",
+            }}
+          >
+            <path d="M6 5a2 2 0 012-2h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5zm10 0H8v14h8V5z"></path>
+            <path d="M13 17a1 1 0 11-2 0 1 1 0 012 0z"></path>
+          </svg>
           Tour via video chat
         </button>
       </div>
-      <button style={ContactCardStyles.requestButton}>Request showing</button>
+
+      <div style={ContactCardStyles.requestShowingContainer}>
+        <button style={ContactCardStyles.requestButton}>Request showing</button>
+        <div style={ContactCardStyles.requestDescription}>
+          Tour for free, no strings attached
+        </div>
+      </div>
+
+      <div style={ContactCardStyles.orContainer}>
+        <div style={ContactCardStyles.orLine}></div>
+        <div style={ContactCardStyles.orText}>OR</div>
+        <div style={ContactCardStyles.orLine}></div>
+      </div>
+
+      <button style={ContactCardStyles.offerButton}>Start an offer</button>
+      <button style={ContactCardStyles.questionButton}>Ask a question</button>
     </div>
   );
 };
