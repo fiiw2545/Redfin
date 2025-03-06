@@ -1155,7 +1155,58 @@ const OverviewCardStyles = {
   },
 };
 
-const ContactCard = () => {
+const ContactCard = ({}) => {
+  const [property, setProperty] = useState(null);
+  const { propertyId } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  console.log("Fetched property data:", property);
+
+  console.log("Property ContactCard ID from URL:", propertyId); // เช็กค่าที่ได้จาก useParams()
+
+  // ดึงข้อมูลจาก API ตาม propertyId
+  const fetchContactCard = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:5000/api/homes/${propertyId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch property details");
+      }
+
+      const data = await response.json();
+      console.log("Fetched property data:", data); // เพิ่ม log เพื่อตรวจสอบข้อมูล
+
+      // ตรวจสอบว่า data มี data ภายในหรือไม่
+      if (data && data.data) {
+        setProperty(data.data); // หาก data มี data ภายใน
+      } else {
+        setProperty(data); // ถ้าไม่มีใช้ข้อมูลตรง ๆ
+      }
+    } catch (error) {
+      console.error("Error fetching property details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (propertyId) {
+      fetchContactCard(); // เรียกใช้ฟังก์ชัน fetchContactCard
+    }
+  }, [propertyId]);
+
+  // ตรวจสอบค่าของ property และ name
+  useEffect(() => {
+    console.log("Current property:", property); // ตรวจสอบค่า property
+    if (property) {
+      console.log("Property name:", property.name || "No name available"); // ตรวจสอบว่า name มีค่าหรือไม่
+    }
+  }, [property]); // เฝ้าติดตามการเปลี่ยนแปลงของ property
+
+  // สร้างวันที่ล่วงหน้า 15 วัน
   const getDates = (totalDays) => {
     const today = new Date();
     const dates = [];
@@ -1181,6 +1232,7 @@ const ContactCard = () => {
   const handleTourOptionSelect = (option) => {
     setSelectedTourOption(option);
   };
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const totalDays = 15;
   const dateArray = getDates(totalDays);
@@ -1197,11 +1249,33 @@ const ContactCard = () => {
     }
   };
 
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  if (!property) return <p>No property found.</p>;
+
   return (
     <div style={ContactCardStyles.container}>
-      <h3 style={ContactCardStyles.title}>Thinking of buying?</h3>
+      <h3 style={ContactCardStyles.title}>{property?.name || "N/A"}</h3>
+      <p style={ContactCardStyles.price}>
+        Price: ${property?.price?.toLocaleString() || "N/A"}
+      </p>
+      <p style={ContactCardStyles.status}>
+        Status: {property?.status || "N/A"}
+      </p>
+      <p style={ContactCardStyles.date}>
+        Listed Date:{" "}
+        {property?.listed_date
+          ? new Date(property.listed_date).toLocaleDateString("en-GB")
+          : "N/A"}
+      </p>
+      <p style={ContactCardStyles.type}>
+        Type: {property?.property_type || "N/A"}
+      </p>
+      <p style={ContactCardStyles.description}>
+        {property?.description || "N/A"}
+      </p>
+      {/* เลือกวันที่ */}
       <div style={ContactCardStyles.dateSelector}>
-        {/* ปุ่มย้อนกลับ */}
         <button
           style={
             currentIndex > 0
@@ -1210,17 +1284,9 @@ const ContactCard = () => {
           }
           onClick={handlePrev}
         >
-          <svg
-            viewBox="0 0 25 24"
-            width="16"
-            height="16"
-            style={{ transform: "rotate(180deg)" }}
-          >
-            <path d="M9.99 18.707a1 1 0 010-1.414L15.285 12 9.99 6.707a1 1 0 111.414-1.414l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0z"></path>
-          </svg>
+          {"<"}
         </button>
 
-        {/* วันที่ */}
         <div style={ContactCardStyles.dateButtonsContainer}>
           {dateArray
             .slice(currentIndex, currentIndex + 3)
@@ -1234,38 +1300,13 @@ const ContactCard = () => {
                 }}
                 onClick={() => handleDateSelect(index)}
               >
-                <div
-                  style={
-                    selectedDateIndex === index
-                      ? { ...ContactCardStyles.dayStyle, color: "#15727a" }
-                      : ContactCardStyles.dayStyle
-                  }
-                >
-                  {date.day}
-                </div>
-                <div
-                  style={
-                    selectedDateIndex === index
-                      ? { ...ContactCardStyles.dateStyle, color: "#15727a" }
-                      : ContactCardStyles.dateStyle
-                  }
-                >
-                  {date.date}
-                </div>
-                <div
-                  style={
-                    selectedDateIndex === index
-                      ? { ...ContactCardStyles.monthStyle, color: "#15727a" }
-                      : ContactCardStyles.monthStyle
-                  }
-                >
-                  {date.month}
-                </div>
+                <div>{date.day}</div>
+                <div>{date.date}</div>
+                <div>{date.month}</div>
               </button>
             ))}
         </div>
 
-        {/* ปุ่มไปข้างหน้า */}
         <button
           style={
             currentIndex + 3 < dateArray.length
@@ -1274,75 +1315,33 @@ const ContactCard = () => {
           }
           onClick={handleNext}
         >
-          <svg viewBox="0 0 25 24" width="16" height="16">
-            <path d="M9.99 18.707a1 1 0 010-1.414L15.285 12 9.99 6.707a1 1 0 111.414-1.414l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0z"></path>
-          </svg>
+          {">"}
         </button>
       </div>
-
+      {/* เลือกประเภทการทัวร์ */}
       <div style={ContactCardStyles.tourOptions}>
         <button
           style={{
             ...ContactCardStyles.tourButton,
-            borderTopLeftRadius: "6px",
-            borderBottomLeftRadius: "6px",
             ...(selectedTourOption === "inPerson" &&
               ContactCardStyles.selectedTourOption),
           }}
           onClick={() => handleTourOptionSelect("inPerson")}
         >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            style={{
-              fill: selectedTourOption === "inPerson" ? "#15727a" : "#333",
-            }}
-          >
-            <path d="M12.707 2.793a1 1 0 00-1.414 0l-7 7-2 2a1 1 0 101.414 1.414L4 12.914V19.5a2 2 0 002 2h2a1 1 0 100-2H6v-8.586l6-6 6 6V19.5h-2a1 1 0 100 2h2a2 2 0 002-2v-6.586l.293.293a1 1 0 001.414-1.414l-9-9zm2 11l-2-2a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414l.293-.293V20.5a1 1 0 102 0v-5.586l.293.293a1 1 0 001.414-1.414z"></path>
-          </svg>
           Tour in person
         </button>
         <button
           style={{
             ...ContactCardStyles.tourButton,
-            borderTopRightRadius: "6px",
-            borderBottomRightRadius: "6px",
             ...(selectedTourOption === "videoChat" &&
               ContactCardStyles.selectedTourOption),
           }}
           onClick={() => handleTourOptionSelect("videoChat")}
         >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            style={{
-              fill: selectedTourOption === "videoChat" ? "#15727a" : "#333",
-            }}
-          >
-            <path d="M6 5a2 2 0 012-2h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5zm10 0H8v14h8V5z"></path>
-            <path d="M13 17a1 1 0 11-2 0 1 1 0 012 0z"></path>
-          </svg>
           Tour via video chat
         </button>
       </div>
-
-      <div style={ContactCardStyles.requestShowingContainer}>
-        <button style={ContactCardStyles.requestButton}>Request showing</button>
-        <div style={ContactCardStyles.requestDescription}>
-          Tour for free, no strings attached
-        </div>
-      </div>
-
-      <div style={ContactCardStyles.orContainer}>
-        <div style={ContactCardStyles.orLine}></div>
-        <div style={ContactCardStyles.orText}>OR</div>
-        <div style={ContactCardStyles.orLine}></div>
-      </div>
-
-      <button style={ContactCardStyles.offerButton}>Start an offer</button>
-      <button style={ContactCardStyles.questionButton}>Ask a question</button>
+      <button style={ContactCardStyles.requestButton}>Request showing</button>
     </div>
   );
 };
