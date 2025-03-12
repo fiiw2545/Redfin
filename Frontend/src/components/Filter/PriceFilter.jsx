@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-const PriceFilter = () => {
+const PriceFilter = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [range, setRange] = useState([50000, 10000000]);
@@ -23,6 +23,14 @@ const PriceFilter = () => {
       updatedRange[index] = Math.min(Math.max(newValue, minValue), maxValue);
       return updatedRange;
     });
+  };
+
+  const handleDone = () => {
+    onChange({
+      min: range[0],
+      max: range[1],
+    });
+    setIsOpen(false);
   };
 
   return (
@@ -86,7 +94,7 @@ const PriceFilter = () => {
             >
               Reset
             </button>
-            <button style={styles.doneButton} onClick={() => setIsOpen(false)}>
+            <button style={styles.doneButton} onClick={handleDone}>
               Done
             </button>
           </div>

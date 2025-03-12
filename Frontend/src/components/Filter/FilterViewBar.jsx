@@ -1,17 +1,151 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGlobalEvent } from "../../context/GlobalEventContext";
-
 import StatusFilter from "./StatusFilter";
 import PriceFilter from "./PriceFilter";
 import BedsBathsFilter from "./BedsBathsFilter";
 import HomeTypeFilter from "./HomeTypeFilter";
 import ViewOption from "../ViewOption/ViewOption";
+import axios from "axios";
 
 const FilterViewBar = ({ setViewOption }) => {
   const { windowSize } = useGlobalEvent();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isHoveredAllFilters, setIsHoveredAllFilters] = useState(false);
   const [isHoveredSaveSearch, setIsHoveredSaveSearch] = useState(false);
+  const [homes, setHomes] = useState([]);
+  const [filters, setFilters] = useState({
+    status: {
+      selectedFilter: "For sale",
+      subFilters: {
+        comingSoon: true,
+        active: true,
+        underContract: false,
+      },
+      soldTimeframe: "Last 3 months",
+    },
+    price: {
+      min: 50000,
+      max: 10000000,
+    },
+    bedsBaths: {
+      beds: "Any",
+      baths: "Any",
+    },
+    homeType: [],
+  });
+
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleBedsBathsChange = (value) => {
+    console.log("ค่าที่ได้รับจาก BedsBathsFilter:", value);
+
+    // รวมค่าของ beds และ baths เข้าด้วยกัน
+    const combinedValue = {
+      beds: value.beds.join(", "), // รวม beds ที่เป็นอาร์เรย์เป็นสตริง
+      baths: value.baths, // baths ไว้เหมือนเดิม
+    };
+
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      bedsBaths: combinedValue, // อัพเดตค่า bedsBaths ให้รวมกัน
+    }));
+  };
+
+  const handlePriceChange = (value) => {
+    console.log("ค่าที่ได้รับจาก PriceFilter:", value);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      price: value,
+    }));
+  };
+
+  const handleHomeTypeChange = (value) => {
+    console.log("ค่าที่ได้รับจาก HomeTypeFilter:", value);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      homeType: value,
+    }));
+  };
+
+  const handleStatusChange = (value) => {
+    console.log("ค่าที่ได้รับจาก StatusFilter:", value);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      status: value,
+    }));
+  };
+
+  const searchHomes = async () => {
+    try {
+      setIsLoading(true);
+
+      const queryParams = new URLSearchParams();
+
+      // ส่งค่าของ status (For Sale, Sold, ฯลฯ)
+      queryParams.append("status", filters.status.selectedFilter);
+
+      // ส่งค่าของ subFilters (comingSoon, active, underContract)
+      queryParams.append("comingSoon", filters.status.subFilters.comingSoon);
+      queryParams.append("active", filters.status.subFilters.active);
+      queryParams.append(
+        "underContract",
+        filters.status.subFilters.underContract
+      );
+
+      // ส่งค่าของราคา
+      queryParams.append("minPrice", filters.price.min);
+      queryParams.append("maxPrice", filters.price.max);
+
+      // ส่งค่าของ beds และ baths
+      if (filters.bedsBaths.beds && filters.bedsBaths.beds !== "Any") {
+        queryParams.append("beds", filters.bedsBaths.beds);
+      }
+      if (filters.bedsBaths.baths && filters.bedsBaths.baths !== "Any") {
+        queryParams.append("baths", filters.bedsBaths.baths);
+      }
+
+      // ส่งค่าของ homeType
+      if (filters.homeType && filters.homeType.length > 0) {
+        queryParams.append("homeTypes", filters.homeType.join(","));
+      }
+
+      const queryString = queryParams.toString();
+      console.log(
+        `Calling API: http://localhost:5000/api/homes/search?${queryString}`
+      );
+
+      const response = await axios.get(
+        `http://localhost:5000/api/homes/search?${queryString}`
+      );
+
+      if (response.data && response.data.length > 0) {
+        console.log("Homes found:", response.data);
+        setSearchResults(response.data);
+      } else {
+        console.log("No homes found for the selected filters.");
+        setSearchResults([]);
+      }
+
+      // Save filters to localStorage
+      localStorage.setItem("savedSearch", JSON.stringify(filters));
+    } catch (error) {
+      console.error("Error searching homes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveSearch = async () => {
+    await searchHomes(); // เรียก API ค้นหาบ้านตามตัวกรอง
+  };
+
+  useEffect(() => {
+    const savedSearch = localStorage.getItem("savedSearch");
+    if (savedSearch) {
+      setFilters(JSON.parse(savedSearch));
+    }
+  }, []);
 
   const toggleDropdown = (filterName) => {
     setActiveDropdown((prev) => (prev === filterName ? null : filterName));
@@ -37,35 +171,28 @@ const FilterViewBar = ({ setViewOption }) => {
         alignItems: isSize500 ? "flex-start" : "center",
       }}
     >
-      {/* Group Filter Buttons */}
       <div
         style={{
           ...styles.filterGroup,
           alignSelf: isSize500 ? "flex-start" : "center",
         }}
       >
-        {shouldShowFilter("TypeFilter") && (
-          <StatusFilter
-            isOpen={activeDropdown === "TypeFilter"}
-            onToggle={() => toggleDropdown("TypeFilter")}
-          />
+        {shouldShowFilter("StatusFilter") && (
+          <StatusFilter value={filters.status} onChange={handleStatusChange} />
         )}
         {shouldShowFilter("PriceFilter") && (
-          <PriceFilter
-            isOpen={activeDropdown === "PriceFilter"}
-            onToggle={() => toggleDropdown("PriceFilter")}
-          />
+          <PriceFilter value={filters.price} onChange={handlePriceChange} />
         )}
         {shouldShowFilter("BedsBathsFilter") && (
           <BedsBathsFilter
-            isOpen={activeDropdown === "BedsBathsFilter"}
-            onToggle={() => toggleDropdown("BedsBathsFilter")}
+            value={filters.bedsBaths}
+            onChange={handleBedsBathsChange}
           />
         )}
         {shouldShowFilter("HomeTypeFilter") && (
           <HomeTypeFilter
-            isOpen={activeDropdown === "HomeTypeFilter"}
-            onToggle={() => toggleDropdown("HomeTypeFilter")}
+            value={filters.homeType}
+            onChange={handleHomeTypeChange}
           />
         )}
         <button
@@ -99,12 +226,13 @@ const FilterViewBar = ({ setViewOption }) => {
           }}
           onMouseEnter={() => setIsHoveredSaveSearch(true)}
           onMouseLeave={() => setIsHoveredSaveSearch(false)}
+          onClick={handleSaveSearch}
+          disabled={isLoading}
         >
-          Save Search
+          {isLoading ? "Searching..." : "Save Search"}
         </button>
       </div>
 
-      {/* ViewOption จะย้ายลงล่างแต่ยังชิดขวา */}
       <div
         style={{
           ...styles.viewOptionContainer,
@@ -114,6 +242,12 @@ const FilterViewBar = ({ setViewOption }) => {
       >
         <ViewOption onSelect={setViewOption} />
       </div>
+
+      {searchResults.length > 0 && (
+        <div style={styles.resultsContainer}>
+          Found {searchResults.length} homes matching your criteria
+        </div>
+      )}
     </div>
   );
 };
@@ -191,6 +325,14 @@ const styles = {
     backgroundColor: "#d55656",
     borderColor: "#d55656",
     color: "#fff",
+  },
+  resultsContainer: {
+    marginTop: "16px",
+    padding: "8px",
+    backgroundColor: "#f0f0f0",
+    borderRadius: "8px",
+    fontSize: "14px",
+    fontWeight: "500",
   },
 };
 export default FilterViewBar;

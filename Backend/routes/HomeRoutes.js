@@ -9,6 +9,7 @@ const {
   updateHome,
   deleteHome,
   getImageHome,
+  searchHomes,
 } = require("../Controllers/HomeControllers");
 
 const router = express.Router();
@@ -55,8 +56,9 @@ router.post("/upload", upload.single("image"), (req, res) => {
 });
 
 // CRUD operations สำหรับบ้าน
-router.get("/", getAllHomes);
-router.get("/:id", getHomeById);
+router.get("/", getAllHomes); // สำหรับดึงข้อมูลทั้งหมด
+router.get("/search", searchHomes); // สำหรับค้นหาบ้านตามเงื่อนไข
+router.get("/:id", getHomeById); // สำหรับดึงข้อมูลบ้านตาม ID
 router.post("/", createHome);
 router.put("/:id", updateHome);
 router.delete("/:id", deleteHome);

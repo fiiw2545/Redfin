@@ -3,10 +3,10 @@ const mongoose = require("mongoose");
 const HomeSchema = new mongoose.Schema(
   {
     name: { type: String, required: true }, // ต้องมีชื่อบ้านเสมอ
-    price: { type: Number, required: true }, // ต้องมีราคาเสมอ
+    price: { type: Number, required: true, index: true }, // ต้องมีราคาเสมอ
     details: {
-      beds: { type: Number, required: true }, // ต้องมีจำนวนห้องนอน
-      baths: { type: Number, required: true }, // ต้องมีจำนวนห้องน้ำ
+      beds: { type: mongoose.Schema.Types.Mixed, required: true, index: true }, // ต้องมีจำนวนห้องนอน
+      baths: { type: Number, required: true, index: true }, // ต้องมีจำนวนห้องน้ำ
       sqft: { type: Number, required: true }, // ต้องมีพื้นที่ใช้สอย
       lot_size: { type: Number, required: false }, // อาจไม่มี
       parking: { type: String, required: false }, // อาจไม่มี
@@ -36,9 +36,32 @@ const HomeSchema = new mongoose.Schema(
     },
     tags: [{ type: String, required: false }],
     listed_date: { type: Date, required: false },
-    sold_date: { type: Date, required: false },
-    status: { type: String, default: "Available" },
-    for_rent: { type: Boolean, default: false },
+    sold_date: { type: Date, index: true },
+    statusDetails: {
+      // ฟิลด์เพิ่มเติมเพื่อแยกสถานะที่เกี่ยวข้อง
+      forSaleStatus: {
+        // สำหรับหัวข้อ For sale
+        type: String,
+        enum: ["Coming soon", "Active", "Under contract"],
+      },
+      soldStatus: {
+        // สำหรับหัวข้อ Sold
+        type: String,
+        enum: [
+          "Last 1 week",
+          "Last 1 month",
+          "Last 3 months",
+          "Last 6 months",
+          "Last 1 year",
+          "Last 2 years",
+          "Last 3 years",
+        ],
+      },
+      forRentStatus: {
+        type: Boolean,
+        default: false,
+      },
+    },
     hoa_dues: { type: Number, required: false },
     year_built: { type: Number, required: false },
     property_type: { type: String, required: true }, // ต้องมีประเภทอสังหาฯ
@@ -52,6 +75,10 @@ const HomeSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// เพิ่ม compound index สำหรับการค้นหาที่ใช้บ่อย
+HomeSchema.index({ status: 1, price: 1 });
+HomeSchema.index({ status: 1, beds: 1 });
 
 const Home = mongoose.model("Home", HomeSchema, "Home");
 

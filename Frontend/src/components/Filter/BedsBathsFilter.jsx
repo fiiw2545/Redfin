@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const BedsBathsFilter = () => {
+const BedsBathsFilter = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedBeds, setSelectedBeds] = useState(["Any"]);
   const [selectedBath, setSelectedBath] = useState("Any");
@@ -73,6 +73,19 @@ const BedsBathsFilter = () => {
     setSelectedBeds(["Any"]);
     setSelectedBath("Any");
   };
+
+  const handleSaveSearch = () => {
+    const selectedData = {
+      beds: selectedBeds,
+      baths: selectedBath,
+    };
+
+    console.log("ค่าที่ส่งออกจาก BedsBathsFilter:", selectedData); // ตรวจสอบก่อนส่ง
+
+    onChange(selectedData);
+    setIsOpen(false);
+  };
+
   return (
     <div style={styles.filterContainer} ref={dropdownRef}>
       <button
@@ -178,7 +191,7 @@ const BedsBathsFilter = () => {
                   ...styles.doneButton,
                   ...(isDoneHovered ? { backgroundColor: "#d55656" } : {}),
                 }}
-                onClick={() => setIsOpen(false)}
+                onClick={handleSaveSearch}
                 onMouseEnter={() => setIsDoneHovered(true)}
                 onMouseLeave={() => setIsDoneHovered(false)}
               >

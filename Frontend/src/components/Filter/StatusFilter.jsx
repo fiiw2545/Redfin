@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const StatusFilter = ({ onFilterChange }) => {
+const StatusFilter = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isDoneHovered, setIsDoneHovered] = useState(false);
@@ -37,7 +37,23 @@ const StatusFilter = ({ onFilterChange }) => {
 
   // ส่งค่ากรองเมื่อมีการเลือกตัวกรอง (ยังไม่ได้)
   const handleFilterChange = () => {
-    onFilterChange(selectedFilter, subFilters, soldTimeframe);
+    onChange({
+      selectedFilter,
+      subFilters,
+      soldTimeframe,
+    });
+  };
+
+  const handleDone = () => {
+    const filterData = {
+      selectedFilter:
+        selectedFilter === "For sale" ? "For Sale" : selectedFilter,
+      subFilters,
+      soldTimeframe,
+    };
+    console.log("📤 ค่าที่ถูกส่งไปจาก StatusFilter:", filterData);
+    onChange(filterData);
+    setIsOpen(false);
   };
 
   return (
@@ -340,15 +356,7 @@ const StatusFilter = ({ onFilterChange }) => {
             )}
           </div>
 
-          <button
-            style={{
-              ...styles.doneButton,
-              ...(isDoneHovered ? { backgroundColor: "#d55656" } : {}),
-            }}
-            onClick={() => setIsOpen(false)}
-            onMouseEnter={() => setIsDoneHovered(true)}
-            onMouseLeave={() => setIsDoneHovered(false)}
-          >
+          <button style={styles.doneButton} onClick={handleDone}>
             Done
           </button>
         </div>

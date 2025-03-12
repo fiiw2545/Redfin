@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const HomeTypeFilter = () => {
+const HomeTypeFilter = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [isHovered, setIsHovered] = useState(false);
@@ -170,6 +170,11 @@ const HomeTypeFilter = () => {
     },
   ];
 
+  const handleDone = () => {
+    onChange(selectedTypes);
+    setIsOpen(false);
+  };
+
   return (
     <div
       style={{ ...styles.filterContainer }}
@@ -255,7 +260,7 @@ const HomeTypeFilter = () => {
                 ...styles.doneButton,
                 ...(isDoneHovered ? { backgroundColor: "#d55656" } : {}),
               }}
-              onClick={() => setIsOpen(false)}
+              onClick={handleDone}
               onMouseEnter={() => setIsDoneHovered(true)}
               onMouseLeave={() => setIsDoneHovered(false)}
             >
